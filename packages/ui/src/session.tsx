@@ -8,6 +8,7 @@ import { api, errorMessage, fieldErrorMap } from '@globalantic/api-client';
 import type { AuthUser, Permission, Role } from '@globalantic/types';
 import { Alert, Button, ErrorState, Input, LoadingState } from './components';
 import { buttonClass } from './button-class';
+import { safeNext } from './safe-next';
 import { ThemeToggle } from './theme';
 import s from './shell.module.css';
 import { Logo } from './logo';
@@ -33,11 +34,7 @@ export function useSession(): SessionValue {
   return ctx;
 }
 
-/** Only allows internal relative paths as post-login destinations (no open redirects). */
-export function safeNext(next: string | null | undefined, fallback = '/'): string {
-  if (!next || !next.startsWith('/') || next.startsWith('//') || next.includes('\\')) return fallback;
-  return next;
-}
+export { safeNext };
 
 export function RequireSession({ roles, children, portalName }: { roles: Role[]; children: React.ReactNode; portalName: string }) {
   const router = useRouter();
