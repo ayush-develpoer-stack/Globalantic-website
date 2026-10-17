@@ -22,6 +22,11 @@ Secrets live only in `backend/.env` (local) or the backend host's environment (p
 | `BUSINESS_WHATSAPP` | optional | missing | |
 | `CLOUDINARY_*` | optional | set | |
 | `MIGRATIONS_DIR` | optional (new) | — | only if the deploy does not ship `prisma/migrations` at the repo root. Otherwise `/health` reports `schema:"unknown"` |
+| `BUSINESS_NOTIFICATION_EMAILS` | recommended (new 2026-10-17) | missing | comma-separated recipients of business/admin notification emails, e.g. `info@globalantic.com,info.globalantic@gmail.com`. **Admin → Notifications → Settings overrides it**; production already has both addresses set there. Falls back to `ADMIN_EMAIL` |
+| `MAIN_SITE_URL` | prod: `https://globalantic.com` (new) | missing (dev default `http://localhost:3000`) | links from admin notifications into the main site's embedded admin (legacy training and careers lists) |
+| `PUBLIC_API_URL` | **yes, in production** | missing | absolute base for upload URLs returned by the API. Unset, it falls back to `http://localhost:4000/api`; that is how a production row got a localhost image URL. The admin now stores relative `/api/files/public/<id>` paths, but set this anyway |
+| `CRON_SECRET` | for CRM reminders **and** notification email retries / retention | missing | schedule `POST /api/crm/reminders/dispatch` and `POST /api/notifications/dispatch` with header `x-cron-secret` (every 5–15 min) |
+| `COOKIE_DOMAIN` | prod: `.globalantic.com` | missing | also needed for the blog **draft preview** on globalantic.com to receive the admin session cookie |
 
 `backend/.env.example` now holds placeholders (checked 2026-10-17). Whether the credentials that used to appear there were rotated could not be verified from here. If they weren't, rotate them in Supabase, Resend and Cloudinary.
 

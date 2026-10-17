@@ -366,6 +366,23 @@ export function createApi(baseUrl: string) {
       audit: (q: Query = {}) => get<Paged<Row>>(`${A}/audit`, q),
     },
 
+    /**
+     * Admin notification centre (staff). Live updates: open an EventSource on streamUrl()
+     * with { withCredentials: true }; poll unreadCount() when a stream cannot stay open.
+     */
+    notifications: {
+      list: (q: { category?: string; severity?: string; unread?: 'true' | 'false'; page?: number; pageSize?: number } = {}) =>
+        get<Paged<AdminNotification> & { unread: number }>('/notifications', q),
+      unreadCount: () => get<{ unread: number }>('/notifications/unread-count'),
+      markRead: (ids: string[] | 'all') => post<{ updated: number }>('/notifications/read', { ids }),
+      settings: () => get<NotificationSettingsView>('/notifications/settings'),
+      saveSettings: (input: Partial<Pick<NotificationSettingsView, 'recipients' | 'emailEnabled' | 'emailMinSeverity' | 'mutedCategories' | 'retentionDays'>>) =>
+        put<NotificationSettingsView>('/notifications/settings', input),
+      deliveries: () => get<Row[]>('/notifications/deliveries'),
+      /** Absolute SSE URL (the session cookie authenticates it). */
+      streamUrl: () => (base ? `${base}/notifications/stream` : ''),
+    },
+
     /** Private files. Upload sends the raw bytes; the server detects the real type. */
     files: {
       upload: async (file: Blob & { name?: string }, purpose: FilePurpose): Promise<StoredFileMeta> => {
@@ -651,6 +668,34 @@ export function createApi(baseUrl: string) {
 }
 
 export type CmsKind = 'blog' | 'portfolio' | 'services' | 'solutions' | 'industries';
+
+export type NotificationCategory = 'lead' | 'training' | 'admission' | 'program' | 'payment' | 'content' | 'hr' | 'system' | 'general';
+export type NotificationSeverity = 'info' | 'important' | 'critical';
+export interface AdminNotification {
+  id: string;
+  type: string;
+  category: NotificationCategory;
+  severity: NotificationSeverity;
+  title: string;
+  body: string;
+  /** Admin-portal path ("/leads/…") or an absolute URL (main-site embedded admin). */
+  link: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
+export interface NotificationSettingsView {
+  recipients: string[];
+  effectiveRecipients: string[];
+  envRecipients: string[];
+  emailEnabled: boolean;
+  emailMinSeverity: NotificationSeverity;
+  mutedCategories: string[];
+  retentionDays: number;
+  emailProviderConfigured: boolean;
+  categories: string[];
+  severities: NotificationSeverity[];
+  updatedAt: string;
+}
 export type GlobalanticApi = ReturnType<typeof createApi>;
 
 /** API base URL from NEXT_PUBLIC_API_URL (public value only — never a secret). */
