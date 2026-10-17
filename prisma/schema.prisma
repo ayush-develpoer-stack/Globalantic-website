@@ -1,0 +1,2504 @@
+// Globalantic — Prisma schema
+// Database: Supabase PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  EDITOR
+  FINANCE
+  TRAINER
+  STUDENT
+  HR
+  EMPLOYEE
+  /// Sales team: works leads in the CRM (admin portal)
+  SALES
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum ContactStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  IN_PROGRESS
+  CONVERTED
+  CLOSED
+  // Sales pipeline stages (added for the CRM; the values above stay valid for existing records)
+  PROPOSAL_SENT
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum TrainingStatus {
+  NEW
+  CONTACTED
+  SHORTLISTED
+  JOINED
+  REJECTED
+  COMPLETED
+}
+
+enum CareerStatus {
+  NEW
+  REVIEWING
+  SHORTLISTED
+  INTERVIEW
+  HIRED
+  REJECTED
+}
+
+enum TrainingMode {
+  OFFLINE
+  ONLINE
+}
+
+enum SubscriberStatus {
+  SUBSCRIBED
+  UNSUBSCRIBED
+}
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(ADMIN)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Added for the training platform (all nullable / defaulted — safe for existing rows)
+  status          UserStatus @default(ACTIVE)
+  /// Normalised digits-only phone (e.g. 919876543210). Unique across all accounts.
+  phone           String?    @unique
+  emailVerifiedAt DateTime?
+  lastLoginAt     DateTime?
+  deletedAt       DateTime?
+
+  sessions           Session[]
+  authTokens         AuthToken[]
+  studentProfile     StudentProfile?
+  applications       AdmissionApplication[]
+  enrollments        Enrollment[]
+  trainerAssignments TrainerAssignment[]
+  attendance         Attendance[]
+  submissions        AssignmentSubmission[]
+  results            Result[]
+  feedbackReceived   Feedback[]             @relation("FeedbackStudent")
+  feedbackGiven      Feedback[]             @relation("FeedbackTrainer")
+  certificates       Certificate[]
+  invoices           Invoice[]
+  payments           Payment[]
+  notifications      Notification[]
+  supportRequests    SupportRequest[]
+  referralCode       ReferralCode?
+  referralsMade      ReferralRegistration[] @relation("Referrer")
+  referredBy         ReferralRegistration?  @relation("Referred")
+  referralRewards    ReferralReward[]       @relation("RewardReferrer")
+  auditLogs          AuditLog[]
+
+  // Employee portal + files
+  employeeProfile    EmployeeProfile?      @relation("EmployeeUser")
+  managedEmployees   EmployeeProfile[]     @relation("EmployeeManager")
+  employeeAttendance EmployeeAttendance[]
+  leaveRequests      LeaveRequest[]
+  projectMemberships ProjectMember[]
+  assignedTasks      Task[]                @relation("TaskAssignee")
+  workUpdates        WorkUpdate[]
+  employeeDocuments  EmployeeDocument[]
+  hrRequests         HrRequest[]
+  storedFiles        StoredFile[]
+  permissionGrants   UserPermissionGrant[]
+  notesAbout         UserNote[]            @relation("NoteSubject")
+
+  // Sales CRM
+  assignedLeads  ContactLead[]        @relation("LeadAssignee")
+  leadActivities LeadActivity[]       @relation("LeadActivityActor")
+  leadRules      LeadAssignmentRule[] @relation("LeadRuleAssignee")
+
+  // Intern examinations
+  examAttempts     ExamAttempt[]     @relation("ExamAttemptStudent")
+  examAssignments  ExamAssignment[]  @relation("ExamAssignmentStudent")
+  examRetakeGrants ExamRetakeGrant[] @relation("ExamRetakeStudent")
+
+  // Certificate program (separate from courses / internships / exams)
+  programEnrollments  ProgramEnrollment[]  @relation("ProgramStudent")
+  programCertificates ProgramCertificate[] @relation("ProgramCertificateStudent")
+
+  // Business documents
+  createdDocuments BusinessDocument[] @relation("DocumentCreator")
+  studentDocuments BusinessDocument[] @relation("DocumentStudent")
+
+  @@index([role])
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Marketing content (CMS-managed)
+// ---------------------------------------------------------------------------
+
+model Service {
+  id             String   @id @default(uuid())
+  slug           String   @unique
+  title          String
+  tagline        String?
+  icon           String?
+  shortDesc      String
+  overview       String
+  problem        String?
+  solution       String?
+  features       Json     @default("[]")
+  deliverables   Json     @default("[]")
+  benefits       Json     @default("[]")
+  technologies   Json     @default("[]")
+  process        Json     @default("[]")
+  useCases       Json     @default("[]")
+  faqs           Json     @default("[]")
+  seoTitle       String?
+  seoDescription String?
+  ogImage        String?
+  /// Hero illustration style for the public page (e.g. "browser", "mobile", "dashboard"); null = derived from the slug
+  heroVariant    String?
+  /// Who the service is for, e.g. ["Startups", "Growing SMBs"]
+  audience       Json     @default("[]")
+  /// Industry slugs this service is relevant to (links to /industries/[slug])
+  industries     Json     @default("[]")
+  order          Int      @default(0)
+  featured       Boolean  @default(false)
+  published      Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([slug])
+  @@index([published])
+  @@index([order])
+  @@map("services")
+}
+
+model Solution {
+  id             String   @id @default(uuid())
+  slug           String   @unique
+  title          String
+  tagline        String?
+  icon           String?
+  shortDesc      String
+  overview       String
+  features       Json     @default("[]")
+  benefits       Json     @default("[]")
+  technologies   Json     @default("[]")
+  useCases       Json     @default("[]")
+  faqs           Json     @default("[]")
+  seoTitle       String?
+  seoDescription String?
+  ogImage        String?
+  order          Int      @default(0)
+  published      Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([slug])
+  @@index([published])
+  @@map("solutions")
+}
+
+model Industry {
+  id               String   @id @default(uuid())
+  slug             String   @unique
+  title            String
+  tagline          String?
+  icon             String?
+  shortDesc        String
+  overview         String
+  challenges       Json     @default("[]")
+  solutions        Json     @default("[]")
+  relevantServices Json     @default("[]")
+  features         Json     @default("[]")
+  technologies     Json     @default("[]")
+  useCases         Json     @default("[]")
+  faqs             Json     @default("[]")
+  seoTitle         String?
+  seoDescription   String?
+  ogImage          String?
+  order            Int      @default(0)
+  published        Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([slug])
+  @@index([published])
+  @@map("industries")
+}
+
+model PortfolioProject {
+  id               String    @id @default(uuid())
+  slug             String    @unique
+  title            String
+  shortDescription String
+  description      String
+  category         String
+  industry         String?
+  client           String?
+  challenge        String?
+  requirement      String?
+  approach         String?
+  solution         String?
+  features         Json      @default("[]")
+  technologies     Json      @default("[]")
+  images           Json      @default("[]")
+  gallery          Json      @default("[]")
+  /// Dedicated card/hero image (uploaded CMS image or https URL); placeholder shown when empty.
+  coverImage       String?
+  coverImageAlt    String?
+  outcome          String?
+  /// Client name and outcome are shown publicly only when the client approved it (verified by staff).
+  clientApproved   Boolean   @default(false)
+  /// Service slugs delivered in this project (shown on those service pages)
+  services         Json      @default("[]")
+  /// Approved external links: [{ label, url }] (https only)
+  links            Json      @default("[]")
+  publishedAt      DateTime?
+  archivedAt       DateTime?
+  featured         Boolean   @default(false)
+  published        Boolean   @default(true)
+  order            Int       @default(0)
+  seoTitle         String?
+  seoDescription   String?
+  ogImage          String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([published])
+  @@index([featured])
+  @@map("portfolio_projects")
+}
+
+model BlogCategory {
+  id        String     @id @default(uuid())
+  slug      String     @unique
+  name      String
+  createdAt DateTime   @default(now())
+  posts     BlogPost[]
+
+  @@index([slug])
+  @@map("blog_categories")
+}
+
+model BlogPost {
+  id             String    @id @default(uuid())
+  slug           String    @unique
+  title          String
+  excerpt        String
+  content        String
+  coverImage     String?
+  coverImageAlt  String?
+  author         String    @default("Globalantic")
+  tags           Json      @default("[]")
+  readingTime    Int       @default(5)
+  seoTitle       String?
+  seoDescription String?
+  ogImage        String?
+  canonicalUrl   String?
+  published      Boolean   @default(false)
+  /// Publication date; a future date keeps a published post hidden until then (scheduled)
+  publishedAt    DateTime?
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  categoryId String?
+  category   BlogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([slug])
+  @@index([published])
+  @@index([publishedAt])
+  @@index([categoryId])
+  @@map("blog_posts")
+}
+
+// ---------------------------------------------------------------------------
+// Lead capture
+// ---------------------------------------------------------------------------
+
+model ContactLead {
+  id        String        @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  service   String?
+  budget    String?
+  message   String
+  status    ContactStatus @default(NEW)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // ---- Sales CRM (added; all nullable/defaulted, so existing rows are untouched) ----
+  /// Human reference shown to the enquirer and staff (LEAD-2026-000001)
+  reference         String?       @unique
+  timeline          String?
+  /// Where the enquiry came from: contact_page, quote_page, service_page, manual_whatsapp, ...
+  source            String?
+  landingPage       String?
+  referrer          String?
+  utmSource         String?
+  utmMedium         String?
+  utmCampaign       String?
+  utmTerm           String?
+  utmContent        String?
+  /// Agreed to receive occasional updates (enquiry replies never need this)
+  marketingConsent  Boolean       @default(false)
+  consentAt         DateTime?
+  contactPreference String?
+  priority          LeadPriority  @default(MEDIUM)
+  assignedToId      String?
+  assignedTo        User?         @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  followUpAt        DateTime?
+  lastActivityAt    DateTime?
+  /// Repeat enquiry from the same email/phone: points at the first open lead
+  duplicateOfId     String?
+  duplicateOf       ContactLead?  @relation("LeadDuplicates", fields: [duplicateOfId], references: [id], onDelete: SetNull)
+  duplicates        ContactLead[] @relation("LeadDuplicates")
+  emailNormalized   String?
+  phoneNormalized   String?
+  ipHash            String?
+
+  activities LeadActivity[]
+  clients    BusinessClient[]
+  documents  BusinessDocument[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([assignedToId])
+  @@index([followUpAt])
+  @@index([emailNormalized])
+  @@index([phoneNormalized])
+  @@map("contact_leads")
+}
+
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+/// Timeline of a lead: notes, stage/assignment/priority/follow-up changes, repeat enquiries, emails.
+model LeadActivity {
+  id        String      @id @default(uuid())
+  leadId    String
+  lead      ContactLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type      String
+  body      String?
+  meta      Json?
+  actorId   String?
+  actor     User?       @relation("LeadActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt DateTime    @default(now())
+
+  @@index([leadId, createdAt])
+  @@map("lead_activities")
+}
+
+/// Auto-assignment: the first active rule whose service matches (null = any service) assigns new leads.
+model LeadAssignmentRule {
+  id         String   @id @default(uuid())
+  service    String?
+  assigneeId String
+  assignee   User     @relation("LeadRuleAssignee", fields: [assigneeId], references: [id], onDelete: Cascade)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([active])
+  @@map("lead_assignment_rules")
+}
+
+/// Anonymous marketing events (CTA / WhatsApp clicks). No IP, cookie, user id or other personal data.
+model MarketingEvent {
+  id          String   @id @default(uuid())
+  type        String
+  label       String?
+  page        String?
+  service     String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  createdAt   DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@map("marketing_events")
+}
+
+model TrainingApplication {
+  id                   String         @id @default(uuid())
+  fullName             String
+  phone                String
+  whatsapp             String?
+  email                String
+  age                  Int?
+  qualification        String
+  college              String?
+  city                 String?
+  mode                 TrainingMode
+  codingExperience     String?
+  whyJoin              String?
+  preferredContactTime String?
+  status               TrainingStatus @default(NEW)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("training_applications")
+}
+
+model CareerApplication {
+  id           String       @id @default(uuid())
+  name         String
+  email        String
+  phone        String?
+  position     String
+  resumeUrl    String?
+  portfolioUrl String?
+  message      String?
+  status       CareerStatus @default(NEW)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("career_applications")
+}
+
+model NewsletterSubscriber {
+  id        String           @id @default(uuid())
+  email     String           @unique
+  status    SubscriberStatus @default(SUBSCRIBED)
+  createdAt DateTime         @default(now())
+
+  @@index([status])
+  @@map("newsletter_subscribers")
+}
+
+// ---------------------------------------------------------------------------
+// Shared reference data
+// ---------------------------------------------------------------------------
+
+model Technology {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  category  String
+  icon      String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([category])
+  @@map("technologies")
+}
+
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  category  String   @default("general")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([category])
+  @@map("faqs")
+}
+
+model SiteSetting {
+  id                String   @id @default(uuid())
+  companyName       String   @default("Globalantic")
+  logoUrl           String?
+  email             String   @default("hello@globalantic.com")
+  /// Second public contact address (shown next to the primary email).
+  secondaryEmail    String?
+  phone             String   @default("")
+  whatsapp          String   @default("")
+  address           String   @default("Bhopal, India")
+  facebookUrl       String?
+  instagramUrl      String?
+  linkedinUrl       String?
+  twitterUrl        String?
+  youtubeUrl        String?
+  footerDescription String   @default("")
+  defaultSeoTitle   String   @default("Globalantic — IT & Digital Solutions")
+  defaultSeoDesc    String   @default("")
+  ctaText           String   @default("Get Free Consultation")
+  /// Official Google Maps link for the verified office (https://maps.app.goo.gl/... or https://www.google.com/maps/...)
+  mapUrl            String?
+  /// Google Maps embed src (https://www.google.com/maps/embed?pb=...) — keyless embed, configured by an admin
+  mapEmbedUrl       String?
+  updatedAt         DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+// ===========================================================================
+// TRAINING PLATFORM
+// Money is stored as integer paise (Rs 1 = 100 paise). Actor columns named
+// *ById are soft references (no FK) to keep the User model readable; AuditLog
+// is the authoritative record of who changed what.
+// ===========================================================================
+
+enum DeliveryMode {
+  ONLINE
+  OFFLINE
+  HYBRID
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum ProgramType {
+  TRAINING
+  INTERNSHIP
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum BatchStatus {
+  UPCOMING
+  OPEN
+  FULL
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TrainerRole {
+  LEAD
+  ASSISTANT
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+  ENROLLED
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  DROPPED
+  SUSPENDED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum AssignmentStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  LATE
+  GRADED
+  RETURNED
+}
+
+enum AssessmentType {
+  QUIZ
+  TEST
+  PROJECT
+  FINAL
+}
+
+enum MaterialType {
+  LINK
+  DOCUMENT
+  VIDEO
+}
+
+enum CertificateStatus {
+  ISSUED
+  REVOKED
+}
+
+enum InvoiceStatus {
+  PAID
+  REFUNDED
+  VOID
+}
+
+enum PaymentProvider {
+  RAZORPAY
+  OFFLINE
+}
+
+enum PaymentStatus {
+  CREATED
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentVerification {
+  CHECKOUT_SIGNATURE
+  WEBHOOK
+  RECONCILIATION
+  OFFLINE_RECORD
+}
+
+enum SupportStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum AuthTokenType {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+enum ReferralCodeStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum ReferralStage {
+  REGISTERED
+  VERIFIED
+  ADMITTED
+  PAID
+  DISQUALIFIED
+}
+
+enum RewardStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  PAID
+  CANCELLED
+}
+
+enum PayoutMethod {
+  UPI
+  BANK_TRANSFER
+  OTHER
+}
+
+enum FraudReviewStatus {
+  OPEN
+  CLEARED
+  CONFIRMED
+}
+
+// ---------------------------------------------------------------------------
+// Sessions & one-time tokens
+// ---------------------------------------------------------------------------
+
+/// Server-side session so logout / suspension / password reset revoke JWTs.
+model Session {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+  ipHash    String?
+  userAgent String?
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+/// Email-verification and password-reset tokens. Only a SHA-256 hash is stored.
+model AuthToken {
+  id        String        @id @default(uuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      AuthTokenType
+  tokenHash String        @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  @@index([userId, type])
+  @@map("auth_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// Catalogue
+// ---------------------------------------------------------------------------
+
+model Course {
+  id                   String       @id @default(uuid())
+  slug                 String       @unique
+  title                String
+  shortDescription     String
+  description          String
+  category             String
+  programType          ProgramType  @default(TRAINING)
+  durationLabel        String
+  durationWeeks        Int?
+  mode                 DeliveryMode
+  level                CourseLevel  @default(BEGINNER)
+  skills               Json         @default("[]")
+  eligibility          String
+  feePaise             Int
+  discountPaise        Int          @default(0)
+  discountLabel        String?
+  thumbnailUrl         String?
+  bannerUrl            String?
+  status               CourseStatus @default(DRAFT)
+  seoTitle             String?
+  seoDescription       String?
+  minAttendancePercent Int          @default(75)
+  order                Int          @default(0)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  deletedAt            DateTime?
+
+  modules         CourseModule[]
+  batches         Batch[]
+  applications    AdmissionApplication[]
+  enrollments     Enrollment[]
+  certificates    Certificate[]
+  examAssignments ExamAssignment[]
+
+  @@index([status])
+  @@index([category])
+  @@index([programType])
+  @@map("courses")
+}
+
+model CourseModule {
+  id            String   @id @default(uuid())
+  courseId      String
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  topics        Json     @default("[]")
+  durationHours Int?
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([courseId, order])
+  @@map("course_modules")
+}
+
+model Batch {
+  id                   String       @id @default(uuid())
+  courseId             String
+  course               Course       @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  name                 String
+  startDate            DateTime
+  endDate              DateTime
+  registrationDeadline DateTime
+  mode                 DeliveryMode
+  venue                String?
+  capacity             Int
+  /// Optional per-batch fee override (paise). Falls back to the course fee.
+  feePaise             Int?
+  status               BatchStatus  @default(UPCOMING)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  deletedAt            DateTime?
+
+  schedules       BatchSchedule[]
+  trainers        TrainerAssignment[]
+  applications    AdmissionApplication[]
+  enrollments     Enrollment[]
+  attendance      Attendance[]
+  assignments     Assignment[]
+  assessments     Assessment[]
+  materials       LearningMaterial[]
+  announcements   Announcement[]
+  feedback        Feedback[]
+  certificates    Certificate[]
+  examAssignments ExamAssignment[]
+
+  @@unique([courseId, name])
+  @@index([status])
+  @@index([startDate])
+  @@map("batches")
+}
+
+/// Recurring weekly class slot. dayOfWeek: 0 = Sunday ... 6 = Saturday. Times are "HH:MM" (IST).
+model BatchSchedule {
+  id        String   @id @default(uuid())
+  batchId   String
+  batch     Batch    @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  topic     String?
+  location  String?
+  createdAt DateTime @default(now())
+
+  @@index([batchId])
+  @@map("batch_schedules")
+}
+
+model TrainerAssignment {
+  id         String      @id @default(uuid())
+  batchId    String
+  batch      Batch       @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  trainerId  String
+  trainer    User        @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  role       TrainerRole @default(LEAD)
+  assignedAt DateTime    @default(now())
+  removedAt  DateTime?
+
+  @@unique([batchId, trainerId])
+  @@index([trainerId])
+  @@map("trainer_assignments")
+}
+
+// ---------------------------------------------------------------------------
+// Students, admissions, enrollment
+// ---------------------------------------------------------------------------
+
+model StudentProfile {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth    DateTime?
+  city           String?
+  qualification  String?
+  institution    String?
+  graduationYear Int?
+  /// Gmail-style canonical email (dots / +tags removed) for duplicate-account checks.
+  emailCanonical String
+  consentAt      DateTime
+  consentVersion String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([emailCanonical])
+  @@map("student_profiles")
+}
+
+model AdmissionApplication {
+  id                  String            @id @default(uuid())
+  applicationNumber   String            @unique
+  studentId           String
+  student             User              @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  courseId            String
+  course              Course            @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  batchId             String
+  batch               Batch             @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  status              ApplicationStatus @default(SUBMITTED)
+  /// Fee snapshot taken from the DB at submission - never from the client.
+  feePaise            Int
+  discountPaise       Int               @default(0)
+  payablePaise        Int
+  qualification       String
+  institution         String?
+  graduationYear      Int?
+  statement           String?
+  documentUrl         String?
+  /// Optional uploaded document (StoredFile, purpose ADMISSION_DOCUMENT)
+  documentFileId      String?
+  documentFile        StoredFile?       @relation(fields: [documentFileId], references: [id], onDelete: SetNull)
+  /// "Request more information" loop between admissions staff and the student
+  infoRequest         String?
+  infoRequestedAt     DateTime?
+  infoResponse        String?
+  infoRespondedAt     DateTime?
+  documentsVerifiedAt DateTime?
+  documentsVerifiedBy String?
+  rejectionReason     String?
+  reviewedById        String?
+  reviewedAt          DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  enrollment Enrollment?
+  payments   Payment[]
+  invoices   Invoice[]
+
+  @@unique([studentId, batchId])
+  @@index([status])
+  @@index([courseId])
+  @@index([batchId])
+  @@map("admission_applications")
+}
+
+model Enrollment {
+  id            String               @id @default(uuid())
+  studentId     String
+  student       User                 @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  courseId      String
+  course        Course               @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  batchId       String
+  batch         Batch                @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  applicationId String               @unique
+  application   AdmissionApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  status        EnrollmentStatus     @default(ACTIVE)
+  enrolledAt    DateTime             @default(now())
+  completedAt   DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  attendance  Attendance[]
+  submissions AssignmentSubmission[]
+  results     Result[]
+  feedback    Feedback[]
+  certificate Certificate?
+
+  @@unique([studentId, batchId])
+  @@index([batchId, status])
+  @@map("enrollments")
+}
+
+// ---------------------------------------------------------------------------
+// Learning
+// ---------------------------------------------------------------------------
+
+model Attendance {
+  id           String           @id @default(uuid())
+  batchId      String
+  batch        Batch            @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  enrollmentId String
+  enrollment   Enrollment       @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  sessionDate  DateTime         @db.Date
+  status       AttendanceStatus
+  remarks      String?
+  markedById   String
+  markedAt     DateTime         @default(now())
+  updatedById  String?
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([enrollmentId, sessionDate])
+  @@index([batchId, sessionDate])
+  @@index([studentId])
+  @@map("attendance")
+}
+
+model Assignment {
+  id          String           @id @default(uuid())
+  batchId     String
+  batch       Batch            @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  resourceUrl String?
+  dueAt       DateTime
+  maxMarks    Int
+  status      AssignmentStatus @default(PUBLISHED)
+  createdById String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deletedAt   DateTime?
+
+  submissions AssignmentSubmission[]
+
+  @@index([batchId, dueAt])
+  @@map("assignments")
+}
+
+model AssignmentSubmission {
+  id           String           @id @default(uuid())
+  assignmentId String
+  assignment   Assignment       @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  enrollmentId String
+  enrollment   Enrollment       @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  content      String?
+  linkUrl      String?
+  /// Optional uploaded file (StoredFile, purpose ASSIGNMENT_SUBMISSION)
+  fileId       String?
+  file         StoredFile?      @relation(fields: [fileId], references: [id], onDelete: SetNull)
+  status       SubmissionStatus @default(SUBMITTED)
+  submittedAt  DateTime         @default(now())
+  marks        Int?
+  feedback     String?
+  gradedById   String?
+  gradedAt     DateTime?
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId])
+  @@map("assignment_submissions")
+}
+
+model Assessment {
+  id               String         @id @default(uuid())
+  batchId          String
+  batch            Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  title            String
+  type             AssessmentType @default(TEST)
+  maxMarks         Int
+  passMarks        Int
+  heldOn           DateTime?
+  resultsPublished Boolean        @default(false)
+  createdById      String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  results Result[]
+
+  @@index([batchId])
+  @@map("assessments")
+}
+
+model Result {
+  id           String     @id @default(uuid())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  enrollmentId String
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  marks        Int
+  remarks      String?
+  recordedById String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([assessmentId, studentId])
+  @@index([studentId])
+  @@map("results")
+}
+
+model Feedback {
+  id           String     @id @default(uuid())
+  batchId      String
+  batch        Batch      @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  enrollmentId String
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User       @relation("FeedbackStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  trainerId    String
+  trainer      User       @relation("FeedbackTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
+  content      String
+  rating       Int?
+  createdAt    DateTime   @default(now())
+
+  @@index([studentId])
+  @@index([batchId])
+  @@map("feedback")
+}
+
+model LearningMaterial {
+  id           String       @id @default(uuid())
+  batchId      String
+  batch        Batch        @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  type         MaterialType @default(LINK)
+  /// https link (LINK/VIDEO materials). Null when the material is an uploaded file.
+  url          String?
+  /// Uploaded file (DOCUMENT materials), readable by enrolled students and the batch trainers
+  fileId       String?
+  file         StoredFile?  @relation(fields: [fileId], references: [id], onDelete: Restrict)
+  uploadedById String
+  createdAt    DateTime     @default(now())
+  deletedAt    DateTime?
+
+  @@index([batchId])
+  @@map("learning_materials")
+}
+
+/// batchId = null means a programme-wide announcement visible to every active student.
+model Announcement {
+  id          String   @id @default(uuid())
+  batchId     String?
+  batch       Batch?   @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  title       String
+  body        String
+  createdById String
+  createdAt   DateTime @default(now())
+
+  @@index([batchId, createdAt])
+  @@map("announcements")
+}
+
+model Certificate {
+  id                String            @id @default(uuid())
+  certificateNumber String            @unique
+  verificationCode  String            @unique
+  enrollmentId      String            @unique
+  enrollment        Enrollment        @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+  studentId         String
+  student           User              @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  courseId          String
+  course            Course            @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  batchId           String
+  batch             Batch             @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  status            CertificateStatus @default(ISSUED)
+  attendancePercent Int
+  issuedAt          DateTime          @default(now())
+  issuedById        String
+  revokedAt         DateTime?
+  revokeReason      String?
+
+  @@index([studentId])
+  @@map("certificates")
+}
+
+// ---------------------------------------------------------------------------
+// Payments
+// ---------------------------------------------------------------------------
+
+/// One ledger for every student payment. Exactly one of applicationId (course/internship admission)
+/// or programEnrollmentId (certificate program) is set — enforced by a CHECK constraint.
+model Payment {
+  id                  String                @id @default(uuid())
+  studentId           String
+  student             User                  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  applicationId       String?
+  application         AdmissionApplication? @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  programEnrollmentId String?
+  programEnrollment   ProgramEnrollment?    @relation(fields: [programEnrollmentId], references: [id], onDelete: Restrict)
+  /// Razorpay dispute state (OPEN / UNDER_REVIEW / WON / LOST / CLOSED). Money status stays in `status`.
+  disputeStatus       String?
+  disputedAt          DateTime?
+  provider            PaymentProvider       @default(RAZORPAY)
+  providerOrderId     String?               @unique
+  providerPaymentId   String?               @unique
+  amountPaise         Int
+  currency            String                @default("INR")
+  status              PaymentStatus         @default(CREATED)
+  method              String?
+  failureReason       String?
+  verifiedAt          DateTime?
+  verifiedVia         PaymentVerification?
+  offlineReference    String?
+  recordedById        String?
+  refundedAt          DateTime?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  invoice        Invoice?
+  referralReward ReferralReward?
+
+  @@index([applicationId])
+  @@index([programEnrollmentId])
+  @@index([studentId])
+  @@index([status])
+  @@map("payments")
+}
+
+/// Invoice doubles as the receipt; it is created only after a verified payment.
+model Invoice {
+  id                  String                @id @default(uuid())
+  invoiceNumber       String                @unique
+  studentId           String
+  student             User                  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  applicationId       String?
+  application         AdmissionApplication? @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  programEnrollmentId String?
+  programEnrollment   ProgramEnrollment?    @relation(fields: [programEnrollmentId], references: [id], onDelete: Restrict)
+  /// Generated receipt PDF (private StoredFile, purpose GENERATED_DOCUMENT); set after the payment commits.
+  pdfFileId           String?               @unique
+  pdfFile             StoredFile?           @relation("InvoicePdf", fields: [pdfFileId], references: [id], onDelete: SetNull)
+  paymentId           String                @unique
+  payment             Payment               @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  amountPaise         Int
+  currency            String                @default("INR")
+  status              InvoiceStatus         @default(PAID)
+  lineItems           Json                  @default("[]")
+  issuedAt            DateTime              @default(now())
+
+  @@index([studentId])
+  @@map("invoices")
+}
+
+/// Every provider webhook delivery, keyed by the provider's event id - replays are no-ops.
+model PaymentWebhookEvent {
+  id          String          @id @default(uuid())
+  provider    PaymentProvider
+  eventId     String          @unique
+  eventType   String
+  payloadHash String
+  receivedAt  DateTime        @default(now())
+  processedAt DateTime?
+  outcome     String?
+
+  @@map("payment_webhook_events")
+}
+
+// ---------------------------------------------------------------------------
+// Communication & support
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime    @default(now())
+  /// lead | training | admission | payment | content | hr | system | general
+  category  String      @default("general")
+  /// info | important | critical
+  severity  String      @default("info")
+  /// Set when this row is one recipient's copy of a platform event (admin notification centre).
+  eventId   String?
+  event     AdminEvent? @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@index([userId, category])
+  @@map("notifications")
+}
+
+model SupportRequest {
+  id            String        @id @default(uuid())
+  studentId     String
+  student       User          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject       String
+  message       String
+  status        SupportStatus @default(OPEN)
+  response      String?
+  respondedById String?
+  respondedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([studentId])
+  @@index([status])
+  @@map("support_requests")
+}
+
+// ---------------------------------------------------------------------------
+// Referral programme
+// ---------------------------------------------------------------------------
+
+/// Singleton (id = 1). The reward amount lives here - never in frontend code.
+model ReferralSettings {
+  id                            Int      @id @default(1)
+  enabled                       Boolean  @default(true)
+  rewardAmountPaise             Int      @default(200000)
+  currency                      String   @default("INR")
+  requireActiveEnrollment       Boolean  @default(true)
+  minPaidAmountPaise            Int      @default(0)
+  refundWindowDays              Int      @default(7)
+  attributionWindowDays         Int      @default(30)
+  maxRewardsPerReferrerPerMonth Int?
+  updatedById                   String?
+  updatedAt                     DateTime @updatedAt
+
+  @@map("referral_settings")
+}
+
+model ReferralCode {
+  id        String             @id @default(uuid())
+  userId    String             @unique
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String             @unique
+  status    ReferralCodeStatus @default(ACTIVE)
+  createdAt DateTime           @default(now())
+
+  clicks        ReferralClick[]
+  registrations ReferralRegistration[]
+
+  @@map("referral_codes")
+}
+
+model ReferralClick {
+  id            String       @id @default(uuid())
+  codeId        String
+  code          ReferralCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  ipHash        String
+  userAgentHash String?
+  createdAt     DateTime     @default(now())
+
+  @@index([codeId, createdAt])
+  @@index([codeId, ipHash])
+  @@map("referral_clicks")
+}
+
+model ReferralRegistration {
+  id                 String        @id @default(uuid())
+  codeId             String
+  code               ReferralCode  @relation(fields: [codeId], references: [id], onDelete: Restrict)
+  referrerId         String
+  referrer           User          @relation("Referrer", fields: [referrerId], references: [id], onDelete: Restrict)
+  /// One referrer per referred account, ever.
+  referredUserId     String        @unique
+  referred           User          @relation("Referred", fields: [referredUserId], references: [id], onDelete: Cascade)
+  stage              ReferralStage @default(REGISTERED)
+  registeredAt       DateTime      @default(now())
+  verifiedAt         DateTime?
+  admittedAt         DateTime?
+  paidAt             DateTime?
+  ipHash             String?
+  fraudSignals       Json          @default("[]")
+  disqualifiedReason String?
+
+  reward       ReferralReward?
+  fraudReviews FraudReview[]
+
+  @@index([referrerId])
+  @@index([stage])
+  @@map("referral_registrations")
+}
+
+model ReferralReward {
+  id              String               @id @default(uuid())
+  registrationId  String               @unique
+  registration    ReferralRegistration @relation(fields: [registrationId], references: [id], onDelete: Restrict)
+  referrerId      String
+  referrer        User                 @relation("RewardReferrer", fields: [referrerId], references: [id], onDelete: Restrict)
+  /// One reward per referred student and per qualifying payment.
+  referredUserId  String               @unique
+  paymentId       String               @unique
+  payment         Payment              @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  /// Snapshot of ReferralSettings.rewardAmountPaise when the reward was created.
+  amountPaise     Int
+  currency        String               @default("INR")
+  status          RewardStatus         @default(PENDING)
+  eligibleAt      DateTime
+  reviewedById    String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+  cancelReason    String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  payout       ReferralPayout?
+  fraudReviews FraudReview[]
+
+  @@index([referrerId])
+  @@index([status])
+  @@map("referral_rewards")
+}
+
+model ReferralPayout {
+  id           String         @id @default(uuid())
+  rewardId     String         @unique
+  reward       ReferralReward @relation(fields: [rewardId], references: [id], onDelete: Restrict)
+  amountPaise  Int
+  method       PayoutMethod
+  reference    String
+  notes        String?
+  paidAt       DateTime       @default(now())
+  recordedById String
+
+  @@map("referral_payouts")
+}
+
+model FraudReview {
+  id             String                @id @default(uuid())
+  registrationId String?
+  registration   ReferralRegistration? @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  rewardId       String?
+  reward         ReferralReward?       @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  signals        Json                  @default("[]")
+  status         FraudReviewStatus     @default(OPEN)
+  notes          String?
+  reviewedById   String?
+  reviewedAt     DateTime?
+  createdAt      DateTime              @default(now())
+
+  @@index([status])
+  @@map("fraud_reviews")
+}
+
+// ---------------------------------------------------------------------------
+// Audit & counters
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorRole  String?
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  reason     String?
+  ipHash     String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+/// Gap-free per-year sequences for human-readable numbers (APP-2026-000001, INV-...).
+model DocumentCounter {
+  key   String @id
+  value Int    @default(0)
+
+  @@map("document_counters")
+}
+
+// ===========================================================================
+// FILES (private storage; served only through authorised download endpoints)
+// ===========================================================================
+
+enum FilePurpose {
+  ASSIGNMENT_SUBMISSION
+  ADMISSION_DOCUMENT
+  EMPLOYEE_DOCUMENT
+  /// Public images (course thumbnails/banners, CMS images) served via /api/files/public/:id
+  COURSE_IMAGE
+  CMS_IMAGE
+  /// Trainer-uploaded learning material (private: enrolled students + batch trainers + staff)
+  LEARNING_MATERIAL
+  /// PDFs generated by the server (receipts, certificates, business documents). Private.
+  GENERATED_DOCUMENT
+  /// Signed copies of agreements uploaded by staff. Private.
+  SIGNED_DOCUMENT
+}
+
+model StoredFile {
+  id           String      @id @default(uuid())
+  ownerId      String
+  owner        User        @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  purpose      FilePurpose
+  /// Random server-generated key; never derived from the client file name.
+  storageKey   String      @unique
+  originalName String
+  /// Detected from the file's magic bytes, not from the extension or client header.
+  mimeType     String
+  sizeBytes    Int
+  sha256       String
+  createdAt    DateTime    @default(now())
+  deletedAt    DateTime?
+
+  submissions       AssignmentSubmission[]
+  applications      AdmissionApplication[]
+  employeeDocuments EmployeeDocument[]
+  learningMaterials LearningMaterial[]
+
+  invoicePdf           Invoice?            @relation("InvoicePdf")
+  certificatePdf       ProgramCertificate? @relation("ProgramCertificatePdf")
+  documentPdfs         BusinessDocument[]  @relation("DocumentPdf")
+  documentSignedCopies BusinessDocument[]  @relation("DocumentSignedCopy")
+
+  @@index([ownerId])
+  @@map("stored_files")
+}
+
+// ===========================================================================
+// EMPLOYEE PORTAL
+// ===========================================================================
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+}
+
+enum EmployeeAttendanceStatus {
+  PRESENT
+  WORK_FROM_HOME
+  HALF_DAY
+  ABSENT
+  ON_LEAVE
+}
+
+enum LeaveType {
+  CASUAL
+  SICK
+  EARNED
+  UNPAID
+  OTHER
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum ProjectStatus {
+  PLANNED
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum EmployeeDocumentCategory {
+  OFFER_LETTER
+  ID_PROOF
+  PAYSLIP
+  POLICY
+  OTHER
+}
+
+enum HrRequestCategory {
+  GENERAL
+  PAYROLL
+  LEAVE
+  IT
+  DOCUMENT
+  OTHER
+}
+
+model EmployeeProfile {
+  id                    String         @id @default(uuid())
+  userId                String         @unique
+  user                  User           @relation("EmployeeUser", fields: [userId], references: [id], onDelete: Cascade)
+  employeeCode          String         @unique
+  department            String
+  designation           String
+  employmentType        EmploymentType @default(FULL_TIME)
+  joiningDate           DateTime       @db.Date
+  managerId             String?
+  manager               User?          @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
+  workLocation          String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  exitDate              DateTime?      @db.Date
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  @@index([department])
+  @@index([managerId])
+  @@map("employee_profiles")
+}
+
+model EmployeeAttendance {
+  id            String                   @id @default(uuid())
+  employeeId    String
+  employee      User                     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date          DateTime                 @db.Date
+  status        EmployeeAttendanceStatus @default(PRESENT)
+  checkInAt     DateTime?
+  checkOutAt    DateTime?
+  notes         String?
+  correctedById String?
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([date])
+  @@map("employee_attendance")
+}
+
+model LeaveRequest {
+  id           String      @id @default(uuid())
+  employeeId   String
+  employee     User        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  type         LeaveType
+  startDate    DateTime    @db.Date
+  endDate      DateTime    @db.Date
+  /// Calendar days (inclusive), computed on the server.
+  days         Int
+  reason       String
+  status       LeaveStatus @default(PENDING)
+  reviewedById String?
+  reviewedAt   DateTime?
+  reviewNote   String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([employeeId, status])
+  @@index([status])
+  @@map("leave_requests")
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  code        String        @unique
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  startDate   DateTime?     @db.Date
+  endDate     DateTime?     @db.Date
+  createdById String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  members     ProjectMember[]
+  tasks       Task[]
+  workUpdates WorkUpdate[]
+
+  @@index([status])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String?
+  addedAt   DateTime @default(now())
+
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@map("project_members")
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  projectId   String?
+  project     Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  title       String
+  description String?
+  assigneeId  String
+  assignee    User         @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: Restrict)
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?    @db.Date
+  createdById String
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  workUpdates WorkUpdate[]
+
+  @@index([assigneeId, status])
+  @@index([projectId])
+  @@map("tasks")
+}
+
+model WorkUpdate {
+  id         String   @id @default(uuid())
+  employeeId String
+  employee   User     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date       DateTime @db.Date
+  summary    String
+  minutes    Int?
+  projectId  String?
+  project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  taskId     String?
+  task       Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+
+  @@index([employeeId, date])
+  @@map("work_updates")
+}
+
+model EmployeeDocument {
+  id                String                   @id @default(uuid())
+  employeeId        String
+  employee          User                     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  title             String
+  category          EmployeeDocumentCategory @default(OTHER)
+  fileId            String
+  file              StoredFile               @relation(fields: [fileId], references: [id], onDelete: Restrict)
+  /// HR can keep a document internal (e.g. verification notes).
+  visibleToEmployee Boolean                  @default(true)
+  uploadedById      String
+  createdAt         DateTime                 @default(now())
+  deletedAt         DateTime?
+
+  @@index([employeeId])
+  @@map("employee_documents")
+}
+
+model HrRequest {
+  id            String            @id @default(uuid())
+  employeeId    String
+  employee      User              @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  category      HrRequestCategory @default(GENERAL)
+  subject       String
+  message       String
+  status        SupportStatus     @default(OPEN)
+  response      String?
+  respondedById String?
+  respondedAt   DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@map("hr_requests")
+}
+
+/// Company-wide announcements for staff (student announcements use `announcements`).
+model CompanyAnnouncement {
+  id          String   @id @default(uuid())
+  title       String
+  body        String
+  createdById String
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("company_announcements")
+}
+
+// ===========================================================================
+// ADMINISTRATION
+// ===========================================================================
+
+/// Extra permissions granted to an individual staff user on top of their role.
+/// Only permissions in GRANTABLE_PERMISSIONS (backend/src/lib/permissions.ts) may be stored.
+model UserPermissionGrant {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission  String
+  grantedById String
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, permission])
+  @@map("user_permission_grants")
+}
+
+/// Internal staff notes about a user (e.g. a student). Never shown to the user.
+model UserNote {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation("NoteSubject", fields: [userId], references: [id], onDelete: Cascade)
+  authorId  String
+  body      String
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  @@index([userId, createdAt])
+  @@map("user_notes")
+}
+
+// ---------------------------------------------------------------------------
+// Intern examinations (Marketing & Sales recruitment)
+//
+// Answer keys (correctOptionIds, guidance, explanation) live only here and are
+// never sent to a student before their result is visible. Timing, attempt
+// limits, scoring and result release are enforced by the API.
+// ---------------------------------------------------------------------------
+
+enum ExamTrack {
+  MARKETING
+  SALES
+}
+
+enum ExamKind {
+  /// Timed online test (objective and/or descriptive questions)
+  TEST
+  /// Practical task(s) answered online, evaluated manually
+  PRACTICAL
+  /// Interview stage: no online attempt; staff record the result
+  INTERVIEW
+}
+
+enum ExamStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ExamQuestionType {
+  SINGLE_CHOICE
+  MULTI_CHOICE
+  TRUE_FALSE
+  DESCRIPTIVE
+}
+
+enum ExamResultVisibility {
+  /// Visible as soon as the attempt is fully evaluated
+  IMMEDIATE
+  /// Visible only after staff release results for the exam
+  ON_RELEASE
+}
+
+enum ExamAssignmentTarget {
+  STUDENT
+  BATCH
+  /// College / institution (matches StudentProfile.institution, case-insensitive)
+  INSTITUTION
+  /// Internship role / programme (a Course)
+  PROGRAM
+}
+
+enum ExamAttemptStatus {
+  IN_PROGRESS
+  /// Submitted; descriptive answers still need manual evaluation
+  SUBMITTED
+  /// Final score known
+  EVALUATED
+}
+
+model ExamQuestion {
+  id               String           @id @default(uuid())
+  track            ExamTrack
+  topic            String
+  type             ExamQuestionType
+  prompt           String
+  /// [{ id, text }] for choice questions; ids are random so position reveals nothing
+  options          Json?
+  correctOptionIds String[]
+  marks            Int              @default(1)
+  /// Model answer / rubric for evaluators (descriptive questions). Never shown to students.
+  guidance         String?
+  /// Shown to the student after results, only if the exam reveals answers
+  explanation      String?
+  archivedAt       DateTime?
+  createdById      String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  exams   ExamQuestionLink[]
+  answers ExamAnswer[]
+
+  @@index([track, topic])
+  @@map("exam_questions")
+}
+
+model Exam {
+  id                  String               @id @default(uuid())
+  title               String
+  description         String?
+  instructions        String
+  /// Shown to students before they start (who may take it, prerequisites)
+  eligibilityNote     String?
+  track               ExamTrack
+  kind                ExamKind             @default(TEST)
+  status              ExamStatus           @default(DRAFT)
+  durationMinutes     Int                  @default(30)
+  passPercent         Int                  @default(50)
+  maxAttempts         Int                  @default(1)
+  /// Random subset of the exam's questions per attempt; null = all questions
+  questionsPerAttempt Int?
+  shuffleQuestions    Boolean              @default(true)
+  shuffleOptions      Boolean              @default(true)
+  resultVisibility    ExamResultVisibility @default(ON_RELEASE)
+  revealAnswers       Boolean              @default(false)
+  /// Negative marking: % of a question's marks deducted for a wrong objective answer (0 = off).
+  /// Unanswered questions score 0; an attempt total never goes below 0.
+  negativeMarkPercent Int                  @default(0)
+  /// Maximum marks for INTERVIEW exams (no questions)
+  interviewMaxMarks   Int?
+  opensAt             DateTime?
+  closesAt            DateTime?
+  resultsReleasedAt   DateTime?
+  publishedAt         DateTime?
+  archivedAt          DateTime?
+  createdById         String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  questions   ExamQuestionLink[]
+  assignments ExamAssignment[]
+  attempts    ExamAttempt[]
+  retakes     ExamRetakeGrant[]
+
+  @@index([status, track])
+  @@map("exams")
+}
+
+model ExamQuestionLink {
+  examId     String
+  exam       Exam         @relation(fields: [examId], references: [id], onDelete: Cascade)
+  questionId String
+  question   ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  position   Int
+
+  @@id([examId, questionId])
+  @@index([questionId])
+  @@map("exam_question_links")
+}
+
+model ExamAssignment {
+  id          String               @id @default(uuid())
+  examId      String
+  exam        Exam                 @relation(fields: [examId], references: [id], onDelete: Cascade)
+  target      ExamAssignmentTarget
+  studentId   String?
+  student     User?                @relation("ExamAssignmentStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  batchId     String?
+  batch       Batch?               @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  courseId    String?
+  course      Course?              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  institution String?
+  createdById String?
+  createdAt   DateTime             @default(now())
+
+  @@index([examId])
+  @@index([studentId])
+  @@index([batchId])
+  @@index([courseId])
+  @@map("exam_assignments")
+}
+
+model ExamAttempt {
+  id             String            @id @default(uuid())
+  examId         String
+  exam           Exam              @relation(fields: [examId], references: [id], onDelete: Restrict)
+  studentId      String
+  student        User              @relation("ExamAttemptStudent", fields: [studentId], references: [id], onDelete: Restrict)
+  attemptNo      Int
+  status         ExamAttemptStatus @default(IN_PROGRESS)
+  autoSubmitted  Boolean           @default(false)
+  startedAt      DateTime          @default(now())
+  /// Server deadline: min(start + duration, exam close)
+  deadlineAt     DateTime
+  submittedAt    DateTime?
+  evaluatedAt    DateTime?
+  evaluatedById  String?
+  /// Question order shown to this student (randomised per attempt)
+  questionIds    String[]
+  /// { questionId: [optionId, ...] } option order shown to this student
+  optionOrder    Json
+  score          Float?
+  maxScore       Int
+  passed         Boolean?
+  feedback       String?
+  /// Times the browser reported the exam tab lost focus. Informational only.
+  focusLossCount Int               @default(0)
+  ipHash         String?
+  userAgent      String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  answers ExamAnswer[]
+
+  @@unique([examId, studentId, attemptNo])
+  @@index([studentId])
+  @@index([examId, status])
+  @@map("exam_attempts")
+}
+
+model ExamAnswer {
+  id                String       @id @default(uuid())
+  attemptId         String
+  attempt           ExamAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId        String
+  question          ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  selectedOptionIds String[]
+  text              String?
+  autoMarks         Float?
+  manualMarks       Float?
+  evaluatorComment  String?
+  savedAt           DateTime     @updatedAt
+
+  @@unique([attemptId, questionId])
+  @@map("exam_answers")
+}
+
+/// Each grant allows one more attempt beyond the exam's maxAttempts for that student.
+model ExamRetakeGrant {
+  id          String   @id @default(uuid())
+  examId      String
+  exam        Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     User     @relation("ExamRetakeStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  grantedById String
+  reason      String
+  createdAt   DateTime @default(now())
+
+  @@index([examId, studentId])
+  @@map("exam_retake_grants")
+}
+
+// ===========================================================================
+// CERTIFICATE PROGRAM (paid, self-paced; separate from courses, internships and exams)
+// Completion = every required lesson completed + final assessment passed.
+// Payment goes through the shared Payment ledger (programEnrollmentId).
+// ===========================================================================
+
+enum ProgramStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ProgramEnrollmentStatus {
+  /// Registered, fee not yet verified. No access to lessons or the assessment.
+  PENDING_PAYMENT
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+model CertificateProgram {
+  id                  String        @id @default(uuid())
+  slug                String        @unique
+  title               String
+  summary             String
+  description         String
+  /// Fee in paise. Changes apply to new registrations only (each enrollment keeps its own snapshot).
+  feePaise            Int
+  currency            String        @default("INR")
+  status              ProgramStatus @default(DRAFT)
+  passPercent         Int           @default(60)
+  maxAttempts         Int           @default(3)
+  /// Questions drawn per attempt (null = all active questions)
+  questionsPerAttempt Int?
+  timeLimitMinutes    Int           @default(30)
+  /// Printed on the certificate
+  certificateTitle    String        @default("Certificate of Completion")
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  lessons      ProgramLesson[]
+  questions    ProgramQuestion[]
+  enrollments  ProgramEnrollment[]
+  certificates ProgramCertificate[]
+
+  @@index([status])
+  @@map("certificate_programs")
+}
+
+model ProgramLesson {
+  id         String             @id @default(uuid())
+  programId  String
+  program    CertificateProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  position   Int
+  title      String
+  body       String
+  videoUrl   String?
+  /// Minimum minutes between first opening the lesson and marking it complete.
+  minMinutes Int                @default(0)
+  required   Boolean            @default(true)
+  archivedAt DateTime?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  progress ProgramLessonProgress[]
+
+  @@index([programId, position])
+  @@map("program_lessons")
+}
+
+/// Answer keys never leave the server.
+model ProgramQuestion {
+  id           String             @id @default(uuid())
+  programId    String
+  program      CertificateProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  prompt       String
+  /// string[] (2-6 options)
+  options      Json
+  correctIndex Int
+  explanation  String?
+  archivedAt   DateTime?
+  createdAt    DateTime           @default(now())
+
+  @@index([programId])
+  @@map("program_questions")
+}
+
+model ProgramEnrollment {
+  id               String                  @id @default(uuid())
+  enrollmentNumber String                  @unique
+  programId        String
+  program          CertificateProgram      @relation(fields: [programId], references: [id], onDelete: Restrict)
+  studentId        String
+  student          User                    @relation("ProgramStudent", fields: [studentId], references: [id], onDelete: Restrict)
+  status           ProgramEnrollmentStatus @default(PENDING_PAYMENT)
+  /// Fee snapshot from the program at registration - never from the client.
+  feePaise         Int
+  currency         String                  @default("INR")
+  /// Extra assessment attempts granted by staff (audited).
+  extraAttempts    Int                     @default(0)
+  registeredAt     DateTime                @default(now())
+  activatedAt      DateTime?
+  completedAt      DateTime?
+  cancelledAt      DateTime?
+  updatedAt        DateTime                @updatedAt
+
+  lessonProgress ProgramLessonProgress[]
+  attempts       ProgramAttempt[]
+  certificate    ProgramCertificate?
+  payments       Payment[]
+  invoices       Invoice[]
+
+  @@unique([programId, studentId])
+  @@index([status])
+  @@map("program_enrollments")
+}
+
+model ProgramLessonProgress {
+  enrollmentId String
+  enrollment   ProgramEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lessonId     String
+  lesson       ProgramLesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  openedAt     DateTime          @default(now())
+  completedAt  DateTime?
+
+  @@id([enrollmentId, lessonId])
+  @@map("program_lesson_progress")
+}
+
+model ProgramAttempt {
+  id           String            @id @default(uuid())
+  enrollmentId String
+  enrollment   ProgramEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  /// Question ids in the order shown
+  questionIds  Json
+  /// { [questionId]: selectedIndex }
+  answers      Json?
+  correctCount Int?
+  scorePercent Int?
+  passed       Boolean?
+  startedAt    DateTime          @default(now())
+  deadlineAt   DateTime
+  submittedAt  DateTime?
+
+  @@index([enrollmentId])
+  @@map("program_attempts")
+}
+
+model ProgramCertificate {
+  id                String             @id @default(uuid())
+  certificateNumber String             @unique
+  verificationCode  String             @unique
+  enrollmentId      String             @unique
+  enrollment        ProgramEnrollment  @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+  programId         String
+  program           CertificateProgram @relation(fields: [programId], references: [id], onDelete: Restrict)
+  studentId         String
+  student           User               @relation("ProgramCertificateStudent", fields: [studentId], references: [id], onDelete: Restrict)
+  /// Snapshots printed on the certificate (stable if the account or program is renamed)
+  studentName       String
+  programTitle      String
+  certificateTitle  String
+  scorePercent      Int
+  status            CertificateStatus  @default(ISSUED)
+  issuedAt          DateTime           @default(now())
+  /// null = issued automatically when the eligibility check passed
+  issuedById        String?
+  revokedAt         DateTime?
+  revokeReason      String?
+  pdfFileId         String?            @unique
+  pdfFile           StoredFile?        @relation("ProgramCertificatePdf", fields: [pdfFileId], references: [id], onDelete: SetNull)
+
+  @@index([studentId])
+  @@index([programId])
+  @@map("program_certificates")
+}
+
+// ===========================================================================
+// BUSINESS DOCUMENTS (quotations, proposals, agreements, invoices, receipts)
+// Money in integer paise. Issued documents are immutable: the PDF and a snapshot
+// of company + party details are stored at issue time.
+// ===========================================================================
+
+/// Company details printed on documents. Single row (id "default"). Empty until staff fill it in;
+/// nothing here is ever invented.
+model BusinessProfile {
+  id               String   @id @default("default")
+  legalName        String   @default("")
+  tradeName        String   @default("Globalantic")
+  addressLine1     String   @default("")
+  addressLine2     String   @default("")
+  city             String   @default("")
+  state            String   @default("")
+  /// GST state code (2 digits) - chooses CGST+SGST vs IGST
+  stateCode        String   @default("")
+  postalCode       String   @default("")
+  country          String   @default("India")
+  email            String   @default("")
+  phone            String   @default("")
+  website          String   @default("")
+  gstRegistered    Boolean  @default(false)
+  gstin            String   @default("")
+  pan              String   @default("")
+  /// Company registration (CIN / LLPIN / Udyam), if any
+  registrationNo   String   @default("")
+  /// Default GST rate in basis points (1800 = 18%)
+  defaultGstRateBp Int      @default(1800)
+  bankDetails      String   @default("")
+  upiId            String   @default("")
+  signatoryName    String   @default("")
+  signatoryTitle   String   @default("")
+  footerNote       String   @default("")
+  /// { [type]: { prefix, financialYear, padding } }
+  numbering        Json     @default("{}")
+  updatedAt        DateTime @updatedAt
+  updatedById      String?
+
+  @@map("business_profile")
+}
+
+model BusinessClient {
+  id           String       @id @default(uuid())
+  name         String
+  company      String?
+  email        String
+  phone        String?
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  stateCode    String?
+  postalCode   String?
+  country      String?      @default("India")
+  gstin        String?
+  notes        String?
+  leadId       String?
+  lead         ContactLead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  archivedAt   DateTime?
+  createdById  String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  documents BusinessDocument[]
+
+  @@index([leadId])
+  @@index([email])
+  @@map("business_clients")
+}
+
+enum BusinessDocumentType {
+  QUOTATION
+  PROPOSAL
+  AGREEMENT
+  INVOICE
+  RECEIPT
+}
+
+enum BusinessDocumentStatus {
+  DRAFT
+  ISSUED
+  SENT
+  ACCEPTED
+  DECLINED
+  SIGNED
+  PARTIALLY_PAID
+  PAID
+  VOID
+  SUPERSEDED
+}
+
+model DocumentTemplate {
+  id         String               @id @default(uuid())
+  type       BusinessDocumentType
+  name       String
+  title      String?
+  /// [{ heading, body }]
+  sections   Json                 @default("[]")
+  /// [{ description, quantity, unitPaise, discountPaise, taxRateBp }]
+  items      Json                 @default("[]")
+  notes      String?
+  terms      String?
+  archivedAt DateTime?
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+
+  documents BusinessDocument[]
+
+  @@index([type])
+  @@map("document_templates")
+}
+
+model BusinessDocument {
+  id               String                 @id @default(uuid())
+  type             BusinessDocumentType
+  status           BusinessDocumentStatus @default(DRAFT)
+  /// Assigned when the document is issued (null while it is a draft)
+  number           String?                @unique
+  revision         Int                    @default(1)
+  revisionOfId     String?
+  revisionOf       BusinessDocument?      @relation("DocumentRevision", fields: [revisionOfId], references: [id], onDelete: SetNull)
+  revisions        BusinessDocument[]     @relation("DocumentRevision")
+  /// Converted from (quotation -> agreement / invoice, invoice -> receipt)
+  sourceId         String?
+  source           BusinessDocument?      @relation("DocumentSource", fields: [sourceId], references: [id], onDelete: SetNull)
+  derived          BusinessDocument[]     @relation("DocumentSource")
+  title            String
+  clientId         String?
+  client           BusinessClient?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  leadId           String?
+  lead             ContactLead?           @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  studentId        String?
+  student          User?                  @relation("DocumentStudent", fields: [studentId], references: [id], onDelete: SetNull)
+  templateId       String?
+  template         DocumentTemplate?      @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  /// Bill-to party: { name, company, email, phone, address lines, city, state, stateCode, postalCode, country, gstin }
+  party            Json
+  /// [{ description, quantity, unitPaise, discountPaise, taxRateBp }]
+  items            Json                   @default("[]")
+  /// [{ heading, body }] scope, deliverables, timeline, terms
+  sections         Json                   @default("[]")
+  notes            String?
+  terms            String?
+  currency         String                 @default("INR")
+  /// GST only when the company is GST-registered with a GSTIN and the document opts in
+  applyGst         Boolean                @default(false)
+  issueDate        DateTime?
+  dueDate          DateTime?
+  validUntil       DateTime?
+  /// Server-computed totals (paise)
+  subtotalPaise    Int                    @default(0)
+  discountPaise    Int                    @default(0)
+  taxPaise         Int                    @default(0)
+  totalPaise       Int                    @default(0)
+  amountPaidPaise  Int                    @default(0)
+  /// Receipt details (type RECEIPT)
+  paymentMethod    String?
+  paymentRef       String?
+  paymentDate      DateTime?
+  /// Frozen at issue: company profile, party, computed lines and taxes
+  snapshot         Json?
+  pdfFileId        String?
+  pdfFile          StoredFile?            @relation("DocumentPdf", fields: [pdfFileId], references: [id], onDelete: SetNull)
+  createdById      String
+  createdBy        User                   @relation("DocumentCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  issuedAt         DateTime?
+  issuedById       String?
+  sentAt           DateTime?
+  acceptedAt       DateTime?
+  declinedAt       DateTime?
+  outcomeNote      String?
+  /// Agreements: only a staff-uploaded signed copy marks a document SIGNED
+  signedAt         DateTime?
+  signedById       String?
+  signedNote       String?
+  signedCopyFileId String?
+  signedCopyFile   StoredFile?            @relation("DocumentSignedCopy", fields: [signedCopyFileId], references: [id], onDelete: SetNull)
+  voidedAt         DateTime?
+  voidReason       String?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  @@index([type, status])
+  @@index([clientId])
+  @@index([leadId])
+  @@index([studentId])
+  @@index([createdById])
+  @@map("business_documents")
+}
+
+/// Transactional emails that carry money or documents (status for audit and troubleshooting).
+model EmailLog {
+  id                String   @id @default(uuid())
+  kind              String
+  to                String
+  subject           String
+  entityType        String?
+  entityId          String?
+  /// SENT | FAILED | SKIPPED (provider not configured)
+  status            String
+  providerMessageId String?
+  error             String?
+  attachments       String?
+  createdAt         DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([status, createdAt])
+  @@map("email_logs")
+}
+
+// ===========================================================================
+// CAMPAIGN LANDING PAGES (advertising) — CMS-managed, rendered at /lp/[slug]
+// Each page focuses one service; copy is entered by staff (no invented offers or prices).
+// ===========================================================================
+
+model LandingPage {
+  id             String    @id @default(uuid())
+  slug           String    @unique
+  /// Service slug the page sells (content, FAQs, technologies and the enquiry form come from it)
+  serviceSlug    String
+  headline       String
+  subheadline    String
+  /// Short benefit bullets: string[]
+  benefits       Json      @default("[]")
+  ctaLabel       String    @default("Get a Free Consultation")
+  /// Optional approved pricing line (only when pricing is approved; empty = none shown)
+  priceNote      String?
+  seoTitle       String?
+  seoDescription String?
+  /// Landing pages are usually excluded from search (ads traffic); set true to allow indexing
+  indexable      Boolean   @default(false)
+  published      Boolean   @default(false)
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([published])
+  @@map("landing_pages")
+}
+
+/// A platform event worth telling staff about (new lead, verified payment, HR request...).
+/// One row per event (dedupeKey makes retries/webhook replays idempotent); each authorised staff
+/// member gets a Notification copy. Email to the business recipients is tracked here.
+model AdminEvent {
+  id            String   @id @default(uuid())
+  dedupeKey     String   @unique
+  category      String
+  severity      String
+  title         String
+  body          String
+  link          String?
+  entityType    String?
+  entityId      String?
+  /// NONE (not emailed) | QUEUED | SENT (accepted by provider) | FAILED | SKIPPED (no provider configured)
+  emailStatus   String   @default("NONE")
+  emailAttempts Int      @default(0)
+  emailError    String?
+  createdAt     DateTime @default(now())
+
+  notifications Notification[]
+
+  @@index([category, createdAt])
+  @@index([emailStatus, createdAt])
+  @@map("admin_events")
+}
+
+/// Single private row (id "default"): who receives business notification emails and which events email.
+/// Never exposed by public endpoints.
+model NotificationSettings {
+  id               String   @id @default("default")
+  /// Overrides BUSINESS_NOTIFICATION_EMAILS when non-empty.
+  recipients       String[] @default([])
+  emailEnabled     Boolean  @default(true)
+  /// Lowest severity that triggers an email: info | important | critical
+  emailMinSeverity String   @default("important")
+  /// Categories that never email (still appear in the notification centre).
+  mutedCategories  String[] @default([])
+  /// Read notifications older than this are purged by the retention job.
+  retentionDays    Int      @default(180)
+  updatedById      String?
+  updatedAt        DateTime @updatedAt
+
+  @@map("notification_settings")
+}

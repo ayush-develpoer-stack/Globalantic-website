@@ -1,0 +1,26 @@
+{
+  "name": "@globalantic/ui",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "sideEffects": [
+    "*.css"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "@globalantic/api-client": "*",
+    "@globalantic/types": "*"
+  },
+  "peerDependencies": {
+    "next": ">=15.5.24",
+    "react": ">=19"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+*/.next/
+*/out/
+backend/dist/
+build/
+.turbo/
+**/.turbo/
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# Prisma
+prisma/*.db
+prisma/migrations/dev.db*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Testing / coverage
+coverage/
+
+# Misc
+.turbo
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+
+# Verification build output
+.next-verify/

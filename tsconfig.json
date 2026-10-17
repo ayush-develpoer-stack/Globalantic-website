@@ -1,0 +1,26 @@
+{
+  "//": "Root base TS config for the Globalantic monorepo. Apps/packages have their own tsconfig; shared packages are resolved via the paths below when consumed.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "dom", "dom.iterable"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@globalantic/ui": ["packages/ui/src"],
+      "@globalantic/types": ["packages/types/src"],
+      "@globalantic/auth": ["packages/auth/src"],
+      "@globalantic/validation": ["packages/validation/src"],
+      "@globalantic/config": ["packages/config/src"],
+      "@globalantic/utils": ["packages/utils/src"]
+    }
+  },
+  "exclude": ["node_modules", "**/dist", "**/.next"]
+}

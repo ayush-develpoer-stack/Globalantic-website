@@ -1,0 +1,49 @@
+{
+  "name": "globalantic",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Globalantic — IT & Digital Solutions + Training/Intern/Employee/Admin/Trainer platform (monorepo)",
+  "packageManager": "npm@11.6.2",
+  "workspaces": [
+    "frontend",
+    "training",
+    "intern",
+    "employee",
+    "admin",
+    "trainer",
+    "backend",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "dev:frontend": "npm --workspace frontend run dev",
+    "dev:training": "npm --workspace training run dev",
+    "dev:intern": "npm --workspace intern run dev",
+    "dev:employee": "npm --workspace employee run dev",
+    "dev:admin": "npm --workspace admin run dev",
+    "dev:trainer": "npm --workspace trainer run dev",
+    "dev:backend": "npm --workspace backend run dev",
+    "build:frontend": "npm --workspace frontend run build",
+    "build:backend": "npm --workspace backend run build",
+    "prisma:generate": "npm --workspace backend run prisma:generate",
+    "prisma:migrate": "npm --workspace backend run prisma:migrate",
+    "prisma:deploy": "npm --workspace backend run prisma:deploy",
+    "prisma:seed": "npm --workspace backend run prisma:seed",
+    "prisma:studio": "npm --workspace backend run prisma:studio",
+    "test:backend": "npm --workspace backend test",
+    "dev:db": "npm --workspace backend run dev:db -- --seed"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0",
+    "turbo": "^2.3.3"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
+  }
+}
