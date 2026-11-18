@@ -1,0 +1,83 @@
+.form {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form :global(button[type='submit']) {
+  gap: 10px;
+  align-self: flex-start;
+}
+
+.serverError {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: 40px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+
+.successIcon {
+  color: var(--success);
+}
+
+.success h3 {
+  font-size: var(--fs-h3);
+}
+
+.success p {
+  max-width: 40ch;
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Multi-step enquiry ---- */
+.steps { display: flex; gap: 8px; list-style: none; padding: 0; margin: 0; flex-wrap: wrap; }
+.stepItem { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; background: var(--surface-2); color: var(--muted-foreground); font-size: var(--fs-sm); font-weight: 600; }
+.stepNum { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--card); border: 1px solid var(--border); font-size: 0.8rem; }
+.stepCurrent { background: var(--accent); color: var(--primary-text); }
+.stepCurrent .stepNum { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+.stepDone .stepNum { background: var(--success); border-color: var(--success); color: #fff; }
+.stepHeading { font-weight: 700; color: var(--foreground); outline: none; }
+.stepBody { display: flex; flex-direction: column; gap: 20px; }
+.stepBody[hidden] { display: none; }
+.navRow { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.form .navRow :global(button[type='submit']) { align-self: auto; }
+.consent { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-secondary); cursor: pointer; }
+.consent input { width: 20px; height: 20px; margin-top: 1px; flex: none; accent-color: var(--primary); }
+.privacy { font-size: var(--fs-xs); color: var(--muted-foreground); }
+.privacy a { color: var(--primary-text); text-decoration: underline; }
+.hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+.nextSteps { text-align: left; display: grid; gap: 6px; padding-left: 20px; margin: 0; max-width: 46ch; }
+.muted { color: var(--muted-foreground); font-size: var(--fs-sm); }
+.successActions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+@media (max-width: 420px) {
+  .stepTitle { display: none; }
+  .stepCurrent .stepTitle { display: inline; }
+  .navRow > * { flex: 1 1 auto; }
+}

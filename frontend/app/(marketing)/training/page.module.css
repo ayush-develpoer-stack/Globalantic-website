@@ -1,0 +1,261 @@
+/* Hero */
+.hero {
+  position: relative;
+  padding-block: 88px 72px;
+  background: var(--gradient-dark);
+  color: var(--text-on-primary);
+  overflow: hidden;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, rgba(166, 108, 255, 0.35), transparent 70%);
+  pointer-events: none;
+}
+
+.heroInner {
+  position: relative;
+  max-width: 780px;
+}
+
+.heroBadges {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.heroTitle {
+  color: var(--inverse-foreground);
+  font-size: var(--fs-hero);
+  margin-bottom: 18px;
+}
+
+.heroLead {
+  color: var(--inverse-muted);
+  font-size: 1.125rem;
+  max-width: 60ch;
+}
+
+.heroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  margin: 28px 0;
+}
+
+.heroMeta li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--inverse-foreground);
+}
+
+.heroMeta svg {
+  color: var(--primary-light);
+}
+
+.heroActions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* Eligibility */
+.eligibilityRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 36px;
+}
+
+.eligibilityPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.eligibilityPill svg {
+  color: var(--primary-text);
+}
+
+/* Curriculum */
+.curriculumGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 40px;
+}
+
+.curriculumCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  font-weight: 600;
+}
+
+.curriculumCheck {
+  color: var(--primary-text);
+  flex-shrink: 0;
+}
+
+/* Benefits */
+.benefitsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 40px;
+}
+
+.benefitItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-weight: 600;
+}
+
+.benefitCheck {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--gradient-primary);
+  color: var(--primary-foreground);
+}
+
+/* Pricing */
+.pricingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 28px;
+  max-width: 860px;
+  margin: 40px auto 0;
+}
+
+.pricingCard {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 32px;
+  border: 1.5px solid var(--border);
+}
+
+.pricingHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pricingMode {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.pricingMode svg {
+  color: var(--primary-text);
+}
+
+.pricingPrices {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.pricingRegular {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.pricingFinal {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.pricingNote {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  margin-top: -8px;
+}
+
+.pricingSeats {
+  margin-top: auto;
+}
+
+.jobNote {
+  max-width: 720px;
+  margin: 36px auto 0;
+  padding: 20px 24px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-strong);
+  background: var(--surface);
+  text-align: center;
+}
+
+.jobNote p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Form */
+.formWrap {
+  max-width: 820px;
+  margin: 40px auto 0;
+  padding: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding-block: 56px 48px;
+  }
+
+  .formWrap {
+    padding: 24px 20px;
+  }
+
+  .pricingCard {
+    padding: 26px 22px;
+  }
+}
+
+.platformNote {
+  text-align: center;
+  margin: -8px auto 28px;
+  max-width: 640px;
+}
+
+.platformNote a {
+  color: var(--primary-text);
+  font-weight: 600;
+}

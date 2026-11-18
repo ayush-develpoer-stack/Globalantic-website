@@ -1,0 +1,79 @@
+/* Fills the parent (which owns the aspect ratio), so a missing image never shifts layout. */
+.wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: var(--primary-text);
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--tone) 22%, transparent) 0%, transparent 60%),
+    linear-gradient(160deg, var(--surface-2) 0%, var(--background-soft) 100%);
+  --tone: var(--primary);
+}
+
+.motif {
+  position: absolute;
+  inset: 8% 6% 18%;
+  width: 88%;
+  height: 74%;
+  color: var(--tone);
+  opacity: 0.55;
+}
+
+.label {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(4px);
+}
+
+.hero .label {
+  left: 20px;
+  bottom: 20px;
+  font-size: 0.8rem;
+}
+
+/* One accent per category family (theme tokens, so light/dark both work). */
+.travel {
+  --tone: var(--chart-2);
+}
+.healthcare {
+  --tone: var(--success);
+}
+.media {
+  --tone: var(--chart-4);
+}
+.commerce {
+  --tone: var(--chart-5);
+}
+.finance {
+  --tone: var(--chart-3);
+}
+.software {
+  --tone: var(--primary);
+}
+.web {
+  --tone: var(--chart-1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .motif {
+    transition: transform var(--transition-slow);
+  }
+  :global(a:hover) .wrap .motif {
+    transform: scale(1.03);
+  }
+}

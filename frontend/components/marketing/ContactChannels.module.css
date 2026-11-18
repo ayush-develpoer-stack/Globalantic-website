@@ -1,0 +1,86 @@
+.list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.compact {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+a.item:hover {
+  border-color: var(--primary-text);
+  transform: translateY(-1px);
+}
+a.item:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+.icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  color: var(--accent-foreground);
+  background: var(--accent);
+}
+.text {
+  display: grid;
+  min-width: 0;
+}
+.label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.value {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.map {
+  display: grid;
+  gap: 12px;
+  margin-top: 28px;
+}
+.frame {
+  width: 100%;
+  height: 360px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--muted);
+}
+.mapLink {
+  display: inline-flex;
+  align-items: center;
+  justify-self: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--primary-text);
+}
+@media (max-width: 600px) {
+  .frame {
+    height: 280px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .item {
+    transition: none;
+  }
+}

@@ -1,0 +1,123 @@
+.cultureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.cultureCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cultureIcon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: var(--gradient-primary);
+  color: var(--primary-foreground);
+}
+
+.cardTitle {
+  font-size: var(--fs-h3);
+}
+
+.roleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.roleCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.roleIcon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--primary-text);
+}
+
+.roleApply {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 8px;
+  font-weight: 600;
+  color: var(--primary-text);
+  transition: gap var(--transition-fast);
+}
+
+.roleApply:hover {
+  gap: 10px;
+}
+
+.skillsWrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.skillsList {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.skillItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.skillCheck {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--gradient-primary);
+  color: var(--primary-foreground);
+}
+
+.formWrap {
+  max-width: 820px;
+  margin: 40px auto 0;
+  padding: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 860px) {
+  .skillsWrap {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .skillsList {
+    grid-template-columns: 1fr;
+  }
+
+  .formWrap {
+    padding: 24px 20px;
+  }
+}

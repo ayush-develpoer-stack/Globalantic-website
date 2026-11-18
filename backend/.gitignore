@@ -1,0 +1,12 @@
+# dependencies (installed per platform; `postinstall` runs `prisma generate`)
+node_modules/
+
+# secrets: set them in the hosting dashboard (see .env.production.example)
+.env
+.env.local
+.env.*.local
+
+# caches and logs
+.turbo/
+*.tsbuildinfo
+*.log

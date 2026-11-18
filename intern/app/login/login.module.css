@@ -1,0 +1,3 @@
+.links { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: var(--fs-sm); }
+.links a { color: var(--primary-text); font-weight: 600; }
+.links a:hover { text-decoration: underline; }

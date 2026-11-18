@@ -1,0 +1,24 @@
+/* Shared layout helpers for employee pages (semantic tokens only). */
+.stack { display: grid; gap: 20px; }
+.grid2 { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+.formGrid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+.full { grid-column: 1 / -1; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.muted { color: var(--muted-foreground); font-size: var(--fs-sm); }
+.small { font-size: var(--fs-xs); color: var(--muted-foreground); }
+.list { display: grid; gap: 10px; }
+.item { padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--card); display: grid; gap: 4px; min-width: 0; }
+.itemHead { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+.itemTitle { font-weight: 700; color: var(--foreground); overflow-wrap: anywhere; }
+.body { white-space: pre-wrap; color: var(--text-secondary); font-size: var(--fs-sm); overflow-wrap: anywhere; }
+.link { color: var(--primary-text); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.spread { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.response { margin-top: 6px; padding: 10px 12px; border-left: 3px solid var(--primary); background: var(--muted); border-radius: var(--radius-xs); }
+.statusSelect { min-height: 40px; padding: 6px 10px; border-radius: var(--radius-sm); border: 1px solid var(--input); background: var(--card); color: var(--foreground); }
+.statusSelect:focus { outline: 2px solid var(--ring); outline-offset: 1px; }
+.cards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.card { display: grid; gap: 8px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--card); color: var(--foreground); transition: border-color var(--transition-fast), box-shadow var(--transition-fast); }
+.card:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
+.card:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.narrow { max-width: 260px; }

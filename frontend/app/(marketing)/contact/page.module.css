@@ -1,0 +1,91 @@
+.layout {
+  display: grid;
+  grid-template-columns: 0.9fr 1.3fr;
+  gap: 48px;
+  align-items: start;
+}
+
+.info {
+  position: sticky;
+  top: 24px;
+}
+
+.intro {
+  margin-bottom: 28px;
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.infoItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.infoIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--primary-text);
+}
+
+.infoLabel {
+  display: block;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.infoValue {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+a.infoValue:hover {
+  color: var(--primary-text);
+}
+
+.formWrap {
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.formTitle {
+  font-size: var(--fs-h3);
+  margin-bottom: 24px;
+}
+
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .info {
+    position: static;
+  }
+
+  .formWrap {
+    padding: 24px 20px;
+  }
+}
+
+.infoTitle {
+  margin: 0 0 8px;
+  font-size: 1.35rem;
+}
+.formWrap {
+  scroll-margin-top: 96px;
+}

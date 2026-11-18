@@ -1,0 +1,27 @@
+.wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 40px;
+  align-items: center;
+  padding: 40px;
+  border-radius: 28px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.copy {
+  display: grid;
+  gap: 18px;
+  justify-items: start;
+}
+.lead {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+@media (max-width: 900px) {
+  .wrap {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 24px;
+  }
+}

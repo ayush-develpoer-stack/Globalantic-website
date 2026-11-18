@@ -1,0 +1,68 @@
+/* Exam screens (student). Semantic tokens only, so light and dark themes both work. */
+
+.meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: var(--fs-sm); color: var(--muted-foreground); }
+.meta span { display: inline-flex; align-items: center; gap: 5px; }
+
+/* ---- Taking an exam ------------------------------------------------------- */
+.bar {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px;
+  padding: 10px 14px; margin: -4px 0 0;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+.barTitle { font-weight: 700; color: var(--foreground); min-width: 0; overflow-wrap: anywhere; font-size: var(--fs-sm); }
+.timer {
+  font-family: var(--font-mono); font-weight: 800; font-size: 1.25rem; font-variant-numeric: tabular-nums;
+  padding: 4px 12px; border-radius: var(--radius-sm); background: var(--accent); color: var(--accent-foreground);
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.timerLow { background: var(--destructive); color: var(--destructive-foreground); }
+.saveState { font-size: var(--fs-xs); color: var(--muted-foreground); display: inline-flex; align-items: center; gap: 5px; }
+.saveBad { color: var(--destructive); font-weight: 600; }
+
+.layout { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1024px) {
+  .layout { grid-template-columns: minmax(0, 1fr) 260px; }
+  .paletteCard { position: sticky; top: 76px; }
+}
+
+.question { display: grid; gap: 14px; }
+.qHead { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.qNumber { font-weight: 800; color: var(--primary-text); font-size: var(--fs-sm); }
+.prompt { font-size: 1.05rem; line-height: var(--lh-normal); color: var(--foreground); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.options { display: grid; gap: 10px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.option {
+  display: flex; gap: 12px; align-items: flex-start; min-height: 48px; cursor: pointer;
+  padding: 12px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--card);
+  color: var(--foreground); overflow-wrap: anywhere;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.option:hover { border-color: var(--border-strong); }
+.option input { width: 20px; height: 20px; margin-top: 1px; flex: none; accent-color: var(--primary); }
+.option:has(input:checked) { border-color: var(--primary); background: var(--accent); }
+.option:has(input:focus-visible) { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+.nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; }
+.navGroup { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 6px; list-style: none; padding: 0; margin: 0; }
+.cell {
+  width: 100%; min-height: 44px; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+  background: var(--card); color: var(--foreground); font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; position: relative;
+}
+.cell:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.cellAnswered { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+.cellCurrent { box-shadow: 0 0 0 2px var(--ring); }
+.cellFlag::after { content: ''; position: absolute; top: 4px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--warning); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: var(--fs-xs); color: var(--muted-foreground); }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid var(--border); vertical-align: -2px; margin-right: 4px; }
+.swatchAnswered { background: var(--primary); border-color: var(--primary); }
+.swatchFlag { background: var(--warning); border-color: var(--warning); border-radius: 50%; }
+
+/* ---- Results ---------------------------------------------------------------- */
+.score { font-size: 2rem; font-weight: 800; color: var(--foreground); font-variant-numeric: tabular-nums; }
+.answerRow { display: grid; gap: 6px; padding: 14px 0; border-top: 1px solid var(--border); }
+.answerRow:first-child { border-top: 0; padding-top: 0; }
+.answerLabel { font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted-foreground); }

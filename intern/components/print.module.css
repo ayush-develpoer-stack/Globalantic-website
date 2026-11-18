@@ -1,0 +1,32 @@
+/* Printable documents (receipt, certificate). Screen uses theme tokens;
+   print forces a plain light layout and hides the portal chrome. */
+.toolbar { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
+.doc {
+  background: var(--card); color: var(--card-foreground);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: clamp(18px, 4vw, 40px); max-width: 860px; margin: 0 auto; display: grid; gap: 20px;
+}
+.docHead { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.brand { font-weight: 800; font-size: 1.3rem; color: var(--primary-text); }
+.meta { text-align: right; font-size: var(--fs-sm); color: var(--text-secondary); }
+.items { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.items th, .items td { padding: 10px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+.items td:last-child, .items th:last-child { text-align: right; white-space: nowrap; }
+.total td { font-weight: 800; color: var(--foreground); border-bottom: none; }
+.note { font-size: var(--fs-xs); color: var(--muted-foreground); }
+
+.cert {
+  border: 3px double var(--primary); border-radius: var(--radius-md); padding: clamp(20px, 5vw, 56px);
+  text-align: center; display: grid; gap: 14px; background: var(--card); max-width: 900px; margin: 0 auto;
+}
+.certEyebrow { letter-spacing: 0.2em; text-transform: uppercase; font-weight: 700; font-size: var(--fs-sm); color: var(--primary-text); }
+.certName { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 800; color: var(--foreground); }
+.certCourse { font-size: clamp(1.1rem, 3vw, 1.5rem); font-weight: 700; color: var(--foreground); }
+.certFoot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--text-secondary); text-align: left; margin-top: 12px; }
+.verify { font-family: var(--font-mono); overflow-wrap: anywhere; }
+
+@media print {
+  .toolbar { display: none; }
+  .doc, .cert { border-color: gray; box-shadow: none; color: black; background: white; }
+  .doc *, .cert * { color: black !important; }
+}

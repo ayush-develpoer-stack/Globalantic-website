@@ -1,0 +1,43 @@
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-secondary);
+  transition: background var(--transition-fast), color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.toggle:hover {
+  background: var(--muted);
+  color: var(--foreground);
+  border-color: var(--border-strong);
+}
+
+.withLabel {
+  width: 100%;
+  height: auto;
+  justify-content: flex-start;
+  padding: 12px 14px;
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
+
+/* The visible icon follows <html data-theme>, which is set before paint. */
+.moon {
+  display: none;
+}
+
+:global([data-theme='dark']) .sun {
+  display: none;
+}
+
+:global([data-theme='dark']) .moon {
+  display: block;
+}

@@ -1,0 +1,6 @@
+/* Print: hide the portal chrome so receipts and certificates print cleanly. */
+@media print {
+  aside, header, .skip-link { display: none !important; }
+  main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  body { background: white !important; }
+}

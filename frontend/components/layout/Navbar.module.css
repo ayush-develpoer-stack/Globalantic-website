@@ -1,0 +1,290 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-navbar);
+  background: color-mix(in srgb, var(--background) 82%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal),
+    background var(--transition-normal);
+}
+
+.scrolled {
+  border-bottom-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+  gap: 24px;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+.logoMark {
+  /* The real logo (public/logo.svg): square mark on a transparent background */
+  display: block;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  object-fit: contain;
+}
+.logoText {
+  color: var(--text-primary);
+}
+
+/* Nav */
+.nav {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+.navList {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 13px;
+  border-radius: var(--radius-sm);
+  font-size: 0.94rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+.navLink:hover {
+  color: var(--primary-text);
+  background: var(--background-soft);
+}
+.active {
+  color: var(--primary-text);
+  font-weight: 600;
+}
+.chevron {
+  transition: transform var(--transition-fast);
+}
+
+/* Mega menu */
+.hasDropdown {
+  position: relative;
+}
+.hasDropdown:hover .chevron {
+  transform: rotate(180deg);
+}
+.mega {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  width: 560px;
+  max-width: 90vw;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 18px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-fast), transform var(--transition-fast),
+    visibility var(--transition-fast);
+}
+.megaOpen {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+.megaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+.megaItem {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.megaItem:hover {
+  background: var(--background-soft);
+  color: var(--primary-text);
+}
+.megaIcon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--background-soft);
+  color: var(--primary-text);
+}
+.megaAll {
+  display: block;
+  margin-top: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary-text);
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 20px;
+  border-radius: var(--radius-full);
+  background: var(--gradient-primary);
+  color: var(--primary-foreground);
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: var(--shadow-primary);
+  transition: transform var(--transition-fast);
+}
+.cta:hover {
+  transform: translateY(-2px);
+}
+/* WhatsApp: darker brand green keeps white text readable; icon-only where space is tight. */
+.waBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-full);
+  background: #0f7a52;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.waBtn:hover {
+  background: #0b6343;
+}
+.waBtn:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+.burger {
+  display: none;
+  color: var(--text-primary);
+  padding: 6px;
+}
+
+/* Between the burger breakpoint and wide screens the 10 links, theme toggle and
+   CTA must share one row — tighten spacing so nothing is clipped. */
+@media (max-width: 1480px) {
+  .inner {
+    gap: 12px;
+  }
+  .navLink {
+    padding: 8px 8px;
+    font-size: 0.9rem;
+  }
+  .cta {
+    padding: 10px 16px;
+  }
+  .waBtn {
+    padding: 0;
+    width: 44px;
+  }
+  .waLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
+@media (max-width: 1300px) {
+  .navLink {
+    padding: 8px 7px;
+    font-size: 0.875rem;
+  }
+  .actions {
+    gap: 8px;
+  }
+}
+
+/* Below this width the full link row cannot fit next to the actions (measured),
+   so navigation moves into the mobile menu. */
+@media (max-width: 1180px) {
+  .nav {
+    display: none;
+  }
+  .burger {
+    display: inline-flex;
+  }
+}
+@media (max-width: 560px) {
+  /* Phones: the floating WhatsApp button and the menu carry these actions. */
+  .cta,
+  .waBtn {
+    display: none;
+  }
+}
+
+/* Click-to-call: icon only in the header (the number is in its accessible name, the footer,
+   the contact page and the mobile menu) so the one-row header never overflows. */
+.phoneBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-strong);
+  color: var(--foreground);
+  font-weight: 600;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+.phoneBtn:hover {
+  border-color: var(--primary-text);
+  color: var(--primary-text);
+}
+.phoneBtn:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+.phoneLabel {
+  display: none;
+}
+@media (max-width: 1480px) {
+  .phoneBtn {
+    padding: 0;
+    width: 44px;
+  }
+}
+@media (max-width: 420px) {
+  .phoneBtn {
+    display: none;
+  }
+}

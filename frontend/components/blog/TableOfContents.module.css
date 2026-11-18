@@ -1,0 +1,39 @@
+.toc {
+  position: sticky;
+  top: 96px;
+  padding: 20px 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.heading {
+  margin-bottom: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  font-size: 0.9rem;
+}
+.nested {
+  padding-left: 14px;
+}
+
+.link {
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+.link:hover {
+  color: var(--primary-text);
+}

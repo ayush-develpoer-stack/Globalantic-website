@@ -1,0 +1,67 @@
+/* Admin notification centre — semantic tokens only (works in light and dark themes). */
+.bellWrap { position: relative; }
+.bellBtn {
+  position: relative; display: inline-grid; place-items: center;
+  width: 40px; height: 40px; border-radius: var(--radius-full);
+  color: var(--foreground); background: transparent; border: 1px solid transparent; cursor: pointer;
+}
+.bellBtn:hover { background: var(--accent); color: var(--accent-foreground); }
+.bellBtn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.bellBtn[aria-expanded='true'] { background: var(--accent); border-color: var(--accent-border); }
+.badge {
+  position: absolute; top: 2px; right: 0; min-width: 18px; height: 18px; padding: 0 5px;
+  display: inline-grid; place-items: center; border-radius: var(--radius-full);
+  background: var(--destructive, var(--danger)); color: var(--destructive-foreground, #fff);
+  font-size: 0.68rem; font-weight: 800; line-height: 1; border: 2px solid var(--background);
+}
+
+.panel {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 60;
+  width: min(400px, calc(100vw - 24px));
+  background: var(--popover, var(--card)); color: var(--popover-foreground, var(--foreground));
+  border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-xl);
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; max-height: min(560px, calc(100vh - 90px));
+  overflow: hidden;
+}
+.panelHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.panelTitle { margin: 0; font-size: var(--fs-sm); font-weight: 800; color: var(--foreground); }
+.panelBody { overflow-y: auto; overscroll-behavior: contain; }
+.panelFoot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--border); }
+.hint { margin: 0; padding: 8px 14px; font-size: var(--fs-xs); color: var(--warning); background: color-mix(in srgb, var(--warning) 10%, transparent); border-bottom: 1px solid var(--border); }
+
+.list { list-style: none; margin: 0; padding: 0; }
+.item {
+  display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 10px; width: 100%; text-align: left;
+  padding: 12px 14px; background: transparent; border: 0; border-bottom: 1px solid var(--border);
+  color: inherit; font: inherit; cursor: pointer;
+}
+.item:hover { background: var(--muted); }
+.item:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+.unread { background: color-mix(in srgb, var(--primary) 6%, transparent); }
+.dot { width: 8px; height: 8px; border-radius: var(--radius-full); margin-top: 6px; background: var(--primary); }
+.dot_info { background: var(--primary); }
+.dot_important { background: var(--warning); }
+.dot_critical { background: var(--destructive, var(--danger)); }
+.read .dot { opacity: 0.25; }
+.title { display: block; font-size: var(--fs-sm); font-weight: 700; color: var(--foreground); overflow-wrap: anywhere; }
+.read .title { font-weight: 600; color: var(--muted-foreground); }
+.body { display: block; margin-top: 2px; font-size: var(--fs-xs); color: var(--muted-foreground); overflow-wrap: anywhere; }
+.meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; font-size: 0.7rem; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
+.empty { padding: 28px 16px; text-align: center; font-size: var(--fs-sm); color: var(--muted-foreground); }
+.linkBtn { background: none; border: 0; padding: 4px 2px; font: inherit; font-size: var(--fs-xs); font-weight: 700; color: var(--primary-text); cursor: pointer; }
+.linkBtn:hover { text-decoration: underline; }
+.linkBtn:disabled { color: var(--muted-foreground); cursor: default; text-decoration: none; }
+.linkBtn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: var(--radius-xs); }
+
+/* Full page list */
+.pageItem { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--card); }
+.pageItem.unread { border-color: var(--accent-border); }
+.pageActions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.recipient { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--card); font-size: var(--fs-sm); overflow-wrap: anywhere; }
+
+@media (max-width: 560px) {
+  /* On phones the panel spans the viewport instead of hanging off the bell. */
+  .panel { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; }
+  .pageItem { grid-template-columns: 10px minmax(0, 1fr); }
+  .pageActions { grid-column: 2; justify-content: flex-start; }
+}

@@ -1,0 +1,41 @@
+.alt {
+  background: var(--background-soft);
+}
+.head {
+  margin-bottom: 32px;
+}
+.price {
+  max-width: 640px;
+  margin: 24px auto 0;
+  padding: 14px 18px;
+  border-radius: 14px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--accent-foreground);
+  background: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+.benefits {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+.benefits li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  font-weight: 600;
+}
+.benefits svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--va);
+}

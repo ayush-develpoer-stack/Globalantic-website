@@ -1,0 +1,36 @@
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding-block: 80px 48px;
+  background: var(--gradient-soft);
+  background-image: var(--gradient-mesh);
+  border-bottom: 1px solid var(--border);
+  isolation: isolate;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(var(--border-strong) 1px, transparent 1.5px);
+  background-size: 26px 26px;
+  opacity: 0.45;
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 0%, #000 25%, transparent 80%);
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 0%, #000 25%, transparent 80%);
+  pointer-events: none;
+}
+
+.heroActions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding-block: 56px 36px;
+  }
+}
