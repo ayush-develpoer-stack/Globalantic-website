@@ -46,3 +46,6 @@ next-env.d.ts
 
 # Verification build output
 .next-verify/
+
+# local reports
+loc-report.csv
