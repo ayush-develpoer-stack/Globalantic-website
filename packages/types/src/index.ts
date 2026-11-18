@@ -90,6 +90,8 @@ export type Permission =
   | 'referrals.settings'
   | 'audit.read'
   | 'users.manage'
+  /** Super Admin: manage ADMIN accounts (individual grant on an ADMIN only). */
+  | 'admins.manage'
   | 'reports.read'
   | 'employees.read'
   | 'employees.manage'

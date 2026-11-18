@@ -40,6 +40,12 @@ async function user(email: string, name: string, role: 'ADMIN' | 'FINANCE' | 'TR
 
 async function main() {
   const admin = await user('admin@example.test', '[DEMO] Admin', 'ADMIN');
+  // Local demo only: the demo admin is a Super Admin so creating admin accounts can be tried out.
+  await prisma.userPermissionGrant.upsert({
+    where: { userId_permission: { userId: admin.id, permission: 'admins.manage' } },
+    update: {},
+    create: { userId: admin.id, permission: 'admins.manage', grantedById: admin.id },
+  });
   await user('finance@example.test', '[DEMO] Finance', 'FINANCE');
   const trainer = await user('trainer@example.test', '[DEMO] Trainer', 'TRAINER');
   const student = await user('student@example.test', '[DEMO] Student One', 'STUDENT', '919000000001');

@@ -34,7 +34,9 @@
     "prisma:seed": "npm --workspace backend run prisma:seed",
     "prisma:studio": "npm --workspace backend run prisma:studio",
     "test:backend": "npm --workspace backend test",
-    "dev:db": "npm --workspace backend run dev:db -- --seed"
+    "dev:db": "npm --workspace backend run dev:db -- --seed",
+    "dev:local": "node scripts/dev-all.mjs",
+    "dev:backend:local": "npm --workspace backend run dev:local --"
   },
   "devDependencies": {
     "prisma": "^5.22.0",

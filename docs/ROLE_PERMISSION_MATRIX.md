@@ -79,7 +79,7 @@ Students reach only `/api/exams/student/*`, and only for published exams assigne
 
 ADMIN can grant extra permissions to individual **EDITOR, FINANCE or HR** users (`POST /api/platform/users/:id/permissions`). Effective permissions = role permissions + valid grants, re-read on every request.
 
-**Never grantable:** `users.manage`, `referrals.settings`, `payments.record_offline`, `audit.read` and every `*.portal` permission.
+**Never grantable:** `admins.manage` (Super Admin; set only with `scripts/super-admin.ts` on an ADMIN account, see docs/USER_MANAGEMENT.md), `users.manage`, `referrals.settings`, `payments.record_offline`, `audit.read` and every `*.portal` permission.
 
 Nobody can change their own permissions. Every grant and revocation is audited with a reason.
 

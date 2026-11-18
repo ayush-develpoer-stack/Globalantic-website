@@ -474,7 +474,16 @@ export function createApi(baseUrl: string) {
       updateUser: (id: string, input: { name?: string; phone?: string | null; reason: string }) => put<Row>(`/platform/users/${id}`, input),
       sendPasswordReset: (id: string, input: { revokeSessions: boolean; reason: string }) => post<Row>(`/platform/users/${id}/password-reset`, input),
       changeRole: (id: string, role: string, reason: string) => patch<Row>(`/platform/users/${id}/role`, { role, reason }),
-      roles: () => get<{ role: string; permissions: string[]; assignable: boolean }[]>('/platform/roles'),
+      /** Suspend / reactivate any account the caller may manage (ADMIN accounts need a Super Admin). */
+      setStatus: (id: string, status: 'ACTIVE' | 'SUSPENDED', reason: string) => patch<Row>(`/platform/users/${id}/status`, { status, reason }),
+      /**
+       * Create an account (roles allowed for the caller are flagged `creatable` by roles()).
+       * The user sets their own password from the emailed link; `setupLink` is returned only
+       * when that email could not be sent.
+       */
+      createUser: (input: CreateUserInput) =>
+        http.request<CreatedUser>('POST', '/platform/users', { body: input }).then((r) => ({ ...r.data, message: r.message })),
+      roles: () => get<{ role: string; permissions: string[]; assignable: boolean; creatable: boolean }[]>('/platform/roles'),
       permissions: () => get<{ permission: string; grantable: boolean; reason: string | null; roles: string[] }[]>('/platform/permissions'),
       grantPermission: (id: string, permission: string, reason: string) => post<Row>(`/platform/users/${id}/permissions`, { permission, reason }),
       revokePermission: (id: string, permission: string, reason: string) =>
@@ -697,6 +706,26 @@ export interface NotificationSettingsView {
   updatedAt: string;
 }
 export type GlobalanticApi = ReturnType<typeof createApi>;
+
+export interface CreateUserInput {
+  name: string;
+  email: string;
+  phone?: string;
+  role: 'ADMIN' | 'EDITOR' | 'FINANCE' | 'TRAINER' | 'HR' | 'EMPLOYEE' | 'SALES' | 'STUDENT';
+  employee?: { department: string; designation: string; employmentType: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN'; joiningDate: string; managerId?: string | null; workLocation?: string | null };
+  student?: { city?: string | null; institution?: string | null; qualification?: string | null };
+}
+export interface CreatedUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  inviteEmail: 'SENT' | 'SKIPPED' | 'FAILED';
+  portalUrl: string | null;
+  setupLink: string | null;
+  message?: string;
+}
 
 /** API base URL from NEXT_PUBLIC_API_URL (public value only — never a secret). */
 /**
